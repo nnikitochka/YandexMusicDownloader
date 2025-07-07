@@ -5,7 +5,7 @@ plugins {
 
 allprojects {
     group = "ru.nnedition.ymdownloader"
-    version = "0.2.3"
+    version = "0.2.4"
 
     repositories {
         maven("https://jitpack.io")
