@@ -1,0 +1,182 @@
+package ru.nnedition.ymdownloader.api.download
+
+import ru.nnedition.ymdownloader.api.client.YandexMusicClient
+import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.objects.artist.Artist
+import ru.nnedition.ymdownloader.api.objects.Track
+import ru.nnedition.ymdownloader.api.utils.createDir
+import nn.edition.yalogger.logger
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.images.ArtworkFactory
+import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.utils.GenreTranslator
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import javax.crypto.Cipher
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
+
+class YandexMusicDownloader(
+    val config: Config,
+    val ymClient: YandexMusicClient,
+) {
+    constructor(config: Config) : this(config, YandexMusicClient.create(config.token))
+
+    val logger = logger(this::class)
+
+    fun downloadArtist(artistId: Long, config: Config) {
+        val artist = ymClient.getArtist(artistId)
+        logger.info("Starting processing artist \"${artist.artist.name}\"")
+        artist.albums.forEach { album ->
+            downloadAlbum(album.id, config)
+        }
+    }
+
+    fun downloadAlbum(albumId: Long, config: Config) {
+        val album = ymClient.getAlbum(albumId)
+
+        if (!album.available)
+            throw Exception("Album \"$albumId\" not available")
+
+        logger.info("Starting processing album \"${album.title}\"")
+
+        album.tracks[0].forEach { track ->
+            downloadTrack(track, album, album.artists[0], config)
+        }
+    }
+
+    fun downloadAlbum(album: Album) {
+
+    }
+
+    fun downloadTrack(trackId: Long, config: Config) {
+    }
+
+    fun downloadTrack(
+        track: Track, album: Album, publisher: Artist, config: Config
+    ) {
+        if (!track.available) return
+
+        logger.info("Starting processing track \"${track.title}\"")
+
+        val info = ymClient.getFileInfo(track.id.toString(), config.quality.toString())
+
+        val allPath = File(config.outPath).createDir()
+        val artistPath = File(allPath, publisher.name).createDir()
+        val albumPath = File(artistPath, album.title).createDir()
+
+        val fileName = "${publisher.name} — ${track.title}"
+
+        val finalFile = File(albumPath, "$fileName.flac")
+
+        if (finalFile.exists()) {
+            logger.info("Track \"$fileName\" already exists.")
+            return
+        }
+
+        val outputFile = File(albumPath, "$fileName.mp4")
+
+        val url = URL(info.url)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+        connection.connectTimeout = 10_000
+        connection.readTimeout = 10_000
+
+        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+            val inputStream = connection.inputStream
+
+            FileOutputStream(outputFile).use { output ->
+                output.write(decryptTrack(inputStream.readAllBytes(), info.key))
+            }
+
+        } else {
+            connection.disconnect()
+            throw Exception("Error while file fownload: ${connection.responseCode} ${connection.responseMessage}")
+        }
+
+        try {
+            mux(outputFile, finalFile, File("/usr/bin/ffmpeg"))
+            outputFile.delete()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
+
+        try {
+            val audioFile = AudioFileIO.read(finalFile)
+            val tag = audioFile.tagOrCreateAndSetDefault
+
+            tag.setField(FieldKey.TITLE, track.title)
+            tag.setField(FieldKey.ALBUM, album.title)
+            tag.setField(FieldKey.YEAR, album.year.toString())
+            tag.setField(FieldKey.ARTIST, album.artists.joinToString(", ") { it.name })
+
+            val genre = track.genre ?: album.genre
+            val translatedGenre = GenreTranslator.translate(genre) ?: let {
+                logger.warn("Найден неизвестный жанр: \"$genre\"")
+                genre
+            }
+
+            tag.setField(FieldKey.GENRE, translatedGenre)
+
+            val coverFile = File(albumPath, "$fileName.jpeg")
+            FileOutputStream(coverFile).use { output ->
+                output.write(ymClient.getCoverData(track.coverUri, false, false, "300x300"))
+            }
+
+            val artwork = ArtworkFactory.createArtworkFromFile(coverFile)
+            artwork.pictureType = 0
+            artwork.description = "Album cover"
+
+            tag.setField(artwork)
+
+            audioFile.commit()
+
+            coverFile.delete()
+
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+    }
+
+    fun decryptTrack(encData: ByteArray, key: String): ByteArray {
+        val keyBytes = key.chunked(2)
+            .map { it.toInt(16).toByte() }
+            .toByteArray()
+
+        if (keyBytes.size != 16)
+            throw IllegalArgumentException("Key must be 16 bytes")
+
+        val nonce = ByteArray(16) { 0 }
+
+        val cipher = Cipher.getInstance("AES/CTR/NoPadding")
+        val secretKey = SecretKeySpec(keyBytes, "AES")
+        val ivSpec = IvParameterSpec(nonce)
+
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+
+        return cipher.doFinal(encData)
+    }
+
+    fun mux(inPath: File, outPath: File, ffmpegPath: File) {
+        val process = ProcessBuilder(
+            ffmpegPath.absolutePath,
+            "-i",
+            inPath.absolutePath,
+            "-c:a",
+            "copy",
+            outPath.absolutePath
+        ).start()
+
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            val errorOutput = process.errorStream.bufferedReader().readText()
+            throw IOException("ffmpeg failed: $errorOutput")
+        }
+    }
+}
