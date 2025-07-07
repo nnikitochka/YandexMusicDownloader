@@ -2,6 +2,9 @@ package ru.nnedition.ymdownloader
 
 import ru.nnedition.ymdownloader.api.client.YandexMusicClient
 import ru.nnedition.ymdownloader.api.download.YandexMusicDownloader
+import ru.nnedition.ymdownloader.api.link.LinkInfo
+import ru.nnedition.ymdownloader.api.link.LinkParser
+import ru.nnedition.ymdownloader.api.link.LinkType
 import java.util.Scanner
 
 object Main {
@@ -16,48 +19,31 @@ object Main {
         while (true) {
             print("Введите ссылку или \"stop\", чтобы остановить программу: ")
 
-            var text = input.nextLine()
+            val text = input.nextLine()
 
-            when {
-                text == "stop" -> {
-                    print("Остановка программы...")
-                    break
-                }
-                text.startsWith("https://music.yandex.ru/") -> {
-                    text = text.removePrefix("https://music.yandex.ru/")
-                    when {
-                        text.startsWith("artist/") -> {
-                            val artistId = text.removePrefix("artist/").toLongOrNull()
-                            if (artistId == null) continue
-
-                            runCatching {
-                                downloader.downloadArtist(artistId, config)
-                            }.onFailure { it.printStackTrace() }
-                        }
-
-                        text.startsWith("album/") -> {
-                            val albumId = text.removePrefix("album/").toLongOrNull()
-                            if (albumId == null) continue
-
-                            runCatching {
-                                downloader.downloadAlbum(albumId, config)
-                            }.onFailure { it.printStackTrace() }
-                        }
-
-                        text.startsWith("track/") -> {
-                            val trackId = text.removePrefix("track/").toIntOrNull()
-                            if (trackId == null) continue
-
-                            println("Обработка трека: $text")
-                        }
-                        else -> {
-                            println("Неизвестный тип ссылки: $text")
-                        }
-                    }
-                }
-                else -> println(text)
+            if (text == "stop") {
+                println("Остановка программы...")
+                break
             }
+
+            val info = LinkParser.parseUrl(text)
+
+            if (info == null) {
+                println("Ссылка не распознана, возможно вы ввели что-то не так :(")
+                continue
+            }
+
+            runCatching {
+                when (info.type) {
+                    LinkType.ALBUM -> downloader.downloadAlbum(info.id, config)
+                    LinkType.ARTIST -> downloader.downloadArtist(info.id, config)
+                    LinkType.TRACK -> downloader.downloadTrack(info.id, config)
+                }
+            }.onFailure { it.printStackTrace() }
         }
+
         input.close()
+
+        println("Спасибо за использование программы :>")
     }
 }
