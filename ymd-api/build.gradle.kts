@@ -1,5 +1,5 @@
 group = "ru.nnedition.ymdownloader"
-version = "1.0-SNAPSHOT"
+version = "0.1"
 
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
