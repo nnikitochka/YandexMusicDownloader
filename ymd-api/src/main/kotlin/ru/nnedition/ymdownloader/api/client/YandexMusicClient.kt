@@ -9,7 +9,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
-import ru.nnedition.ymdownloader.api.objects.artist.Artist
+import ru.nnedition.ymdownloader.api.config.Config
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.time.Instant
 import java.util.Base64
@@ -40,6 +40,7 @@ class YandexMusicClient private constructor(
         private const val YANDEX_USER_AGENT = "YandexMusicDesktopAppWindows/5.54.0"
         private const val SECRET = "kzqU4XhfCaY6B6JTHODeq5"
 
+        fun create(config: Config) = create(config.token)
         fun create(token: String): YandexMusicClient {
             val client = OkHttpClient.Builder()
                 .addInterceptor { chain ->
