@@ -2,9 +2,6 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
-group = "ru.nnedition.ymdownloader"
-version = "1.1"
-
 dependencies {
     implementation(project(":ymd-api"))
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
