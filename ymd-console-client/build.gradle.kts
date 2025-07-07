@@ -1,5 +1,6 @@
 plugins {
     id("com.gradleup.shadow") version "8.3.0"
+    `maven-publish`
 }
 
 group = "ru.nnedition.ymdownloader"
@@ -21,6 +22,8 @@ tasks {
             attributes["Implementation-Title"] = "YandexMusicDownloader"
             attributes["Implementation-Version"] = version
         }
+
+        enabled = false
     }
 
     build {
@@ -31,5 +34,31 @@ tasks {
         mergeServiceFiles()
         archiveClassifier.set("")
         archiveFileName.set("YandexMusicDownloader.jar")
+    }
+}
+
+// Конфигурация публикации
+publishing {
+    publications {
+        create<MavenPublication>("ymd-console-client") {
+            artifact(tasks["shadowJar"])
+
+            pom {
+                name.set("Yandex Music Downloader")
+                url.set("https://github.com/nnikitochka/YandexMusicDownloader")
+
+                withXml {
+                    val dependenciesNode = asNode().appendNode("dependencies")
+                    configurations.implementation.get().allDependencies.forEach {
+                        if (it.group != null && it.name != "unspecified") {
+                            val dependencyNode = dependenciesNode.appendNode("dependency")
+                            dependencyNode.appendNode("groupId", it.group)
+                            dependencyNode.appendNode("artifactId", it.name)
+                            dependencyNode.appendNode("version", it.version)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
