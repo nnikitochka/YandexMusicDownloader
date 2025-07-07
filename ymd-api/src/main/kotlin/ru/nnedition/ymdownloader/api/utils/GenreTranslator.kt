@@ -1,7 +1,7 @@
 package ru.nnedition.ymdownloader.api.utils
 
 object GenreTranslator {
-    private val genres = mapOf(
+    private val genres = hashMapOf(
         "alternative" to "Альтернатива",
         "pop" to "Поп",
         "ruspop" to "Русский поп",
@@ -16,6 +16,8 @@ object GenreTranslator {
         "blues" to "Блюз",
         "videogame" to "Видеоигры",
         "classicmetal" to "Классический метал",
+        "rap" to "Рэп",
+        "allrock" to "Рок",
     )
 
     fun translate(genre: String) = genres[genre]
