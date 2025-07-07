@@ -10,6 +10,7 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.utils.GenreTranslator
 import java.io.File
 import java.io.FileOutputStream
@@ -58,6 +59,10 @@ class YandexMusicDownloader(
 
     fun downloadTrack(
         track: Track, album: Album, publisher: Artist, config: Config
+    ) = downloadTrack(track, album, ArtistMeta(publisher.id, publisher.name), config)
+
+    fun downloadTrack(
+        track: Track, album: Album, publisher: ArtistMeta, config: Config
     ) {
         if (!track.available) return
 
