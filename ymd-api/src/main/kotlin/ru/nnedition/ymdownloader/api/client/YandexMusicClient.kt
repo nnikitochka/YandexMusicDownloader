@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
 import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.time.Instant
 import java.util.Base64
@@ -93,6 +94,19 @@ class YandexMusicClient private constructor(
         return client.newCall(request).execute().use { response ->
             val json = response.body?.string() ?: error("Empty response")
             gson.fromJson(JsonParser.parseString(json).asJsonObject["result"], Album::class.java)
+        }
+    }
+
+
+    fun getTrack(trackId: Long): Track {
+        val request = Request.Builder()
+            .url("$API_URL/tracks/$trackId")
+            .addHeader("Authorization", oauthToken)
+            .build()
+
+        return client.newCall(request).execute().use { response ->
+            val json = response.body?.string() ?: error("Empty response")
+            gson.fromJson(JsonParser.parseString(json).asJsonObject["result"], Array<Track>::class.java)[0]
         }
     }
 

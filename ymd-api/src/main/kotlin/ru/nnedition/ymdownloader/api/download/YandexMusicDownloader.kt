@@ -55,6 +55,12 @@ class YandexMusicDownloader(
     }
 
     fun downloadTrack(trackId: Long, config: Config) {
+        val track = ymClient.getTrack(trackId)
+
+        if (!track.available)
+            throw Exception("Track \"$trackId\" not available")
+
+        downloadTrack(track, track.albums[0], track.artists[0], config)
     }
 
     fun downloadTrack(
