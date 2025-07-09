@@ -50,7 +50,9 @@ class YandexMusicDownloader(
     }
 
     fun downloadAlbum(album: Album) {
-
+        album.tracks[0].forEach { track ->
+            downloadTrack(track, album, album.artists[0], config)
+        }
     }
 
     fun downloadTrack(trackId: Long, config: Config) {
