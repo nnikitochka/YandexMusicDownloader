@@ -1,16 +1,16 @@
-package ru.nnedition.ymdownloader.api.client
+package ru.nnedition.ymdownloader.api
 
-import ru.nnedition.ymdownloader.api.objects.album.Album
-import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import ru.nnedition.ymdownloader.api.objects.UserInfo
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
 import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import ru.nnedition.ymdownloader.api.objects.Track
+import ru.nnedition.ymdownloader.api.objects.UserInfo
+import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.time.Instant
 import java.util.Base64
@@ -152,11 +152,11 @@ class YandexMusicClient private constructor(
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw IOException("Unexpected response code: ${response.code}")
+                throw okio.IOException("Unexpected response code: ${response.code}")
             }
 
             val json = response.body?.string()
-                ?: throw IOException("Response body is null")
+                ?: throw okio.IOException("Response body is null")
 
             return gson.fromJson(
                 JsonParser.parseString(json).asJsonObject["result"].asJsonObject["downloadInfo"],
@@ -169,6 +169,7 @@ class YandexMusicClient private constructor(
         url: String,
         original: Boolean,
         withRange: Boolean,
+        // Максимально доступное разрешение
         quality: String = "800x800"
     ): ByteArray {
         val toReplace = if (original) "/orig" else "/$quality"
@@ -184,10 +185,10 @@ class YandexMusicClient private constructor(
         val response = client.newCall(request.build()).execute()
 
         if (!response.isSuccessful)
-            throw IOException("HTTP error: ${response.code}")
+            throw okio.IOException("HTTP error: ${response.code}")
 
         response.use { resp ->
-            return resp.body?.bytes() ?: throw IOException("Empty response body")
+            return resp.body?.bytes() ?: throw okio.IOException("Empty response body")
         }
     }
 }

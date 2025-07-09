@@ -1,17 +1,16 @@
-package ru.nnedition.ymdownloader.api.download
+package ru.nnedition.ymdownloader.api
 
-import ru.nnedition.ymdownloader.api.client.YandexMusicClient
-import ru.nnedition.ymdownloader.api.config.Config
-import ru.nnedition.ymdownloader.api.objects.artist.Artist
-import ru.nnedition.ymdownloader.api.objects.Track
-import ru.nnedition.ymdownloader.api.utils.createDir
 import nn.edition.yalogger.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
+import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.objects.artist.Artist
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.utils.GenreTranslator
+import ru.nnedition.ymdownloader.api.utils.createDir
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
