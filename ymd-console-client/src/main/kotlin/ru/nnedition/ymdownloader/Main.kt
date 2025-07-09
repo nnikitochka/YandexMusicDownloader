@@ -1,7 +1,7 @@
 package ru.nnedition.ymdownloader
 
-import ru.nnedition.ymdownloader.api.client.YandexMusicClient
-import ru.nnedition.ymdownloader.api.download.YandexMusicDownloader
+import ru.nnedition.ymdownloader.api.YandexMusicClient
+import ru.nnedition.ymdownloader.api.YandexMusicDownloader
 import ru.nnedition.ymdownloader.api.link.LinkInfo
 import ru.nnedition.ymdownloader.api.link.LinkParser
 import ru.nnedition.ymdownloader.api.link.LinkType
