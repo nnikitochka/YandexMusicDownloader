@@ -3,7 +3,7 @@ package ru.nnedition.ymdownloader.api.ffmpeg
 import java.io.File
 import java.io.IOException
 
-class LinuxFFmpegProvider : FFmpegProvider() {
+class LinuxFFmpegProvider : FFmpegProvider {
     val ffmpegPath: String = "/usr/bin/ffmpeg"
     val ffmpegFile: File = File(ffmpegPath)
 
