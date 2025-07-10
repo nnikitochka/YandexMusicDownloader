@@ -5,7 +5,7 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import ru.nnedition.ymdownloader.api.config.Config
-import ru.nnedition.ymdownloader.api.ffmpeg.FFmpegProvider
+import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.Artist
@@ -23,9 +23,9 @@ import javax.crypto.spec.SecretKeySpec
 class YandexMusicDownloader(
     val config: Config,
     val ymClient: YandexMusicClient,
-    val ffmpeg: FFmpegProvider
+    val ffmpeg: FfmpegProvider
 ) {
-    constructor(config: Config, ffmpeg: FFmpegProvider) : this(config, YandexMusicClient.create(config.token), ffmpeg)
+    constructor(config: Config, ffmpeg: FfmpegProvider) : this(config, YandexMusicClient.create(config.token), ffmpeg)
 
     val logger = logger(this::class)
 

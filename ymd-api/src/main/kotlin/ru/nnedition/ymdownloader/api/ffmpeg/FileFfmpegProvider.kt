@@ -4,12 +4,12 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Реализация [FFmpegProvider], которая использует локальный исполняемый файл ffmpeg.
+ * Реализация [FfmpegProvider], которая использует локальный исполняемый файл ffmpeg.
  * @param ffmpegFile Файл исполняемого файла ffmpeg.
  */
-open class FileFFmpegProvider(
+open class FileFfmpegProvider(
     val ffmpegFile: File
-) : FFmpegProvider {
+) : FfmpegProvider {
     constructor(
         ffmpegPath: String
     ) : this(File(ffmpegPath))

@@ -6,7 +6,7 @@ import java.io.File
  * Интерфейс для работы с ffmpeg.
  * Предоставляет методы для выполнения mux (перекодирования) аудиофайлов.
  */
-interface FFmpegProvider {
+interface FfmpegProvider {
     /**
      * Выполняет mux (перекодирование) аудиофайла с использованием ffmpeg.
      * @param inPath Путь к входному аудиофайлу.

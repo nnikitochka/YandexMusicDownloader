@@ -8,9 +8,9 @@ import java.io.File
  *
  * @param ffmpegFile Файл ffmpeg.
  */
-class LinuxFFmpegProvider(
+class LinuxFfmpegProvider(
     ffmpegFile: File
-) : FileFFmpegProvider(ffmpegFile) {
+) : FileFfmpegProvider(ffmpegFile) {
     constructor(
         ffmpegPath: String = "/usr/bin/ffmpeg"
     ) : this(File(ffmpegPath))
