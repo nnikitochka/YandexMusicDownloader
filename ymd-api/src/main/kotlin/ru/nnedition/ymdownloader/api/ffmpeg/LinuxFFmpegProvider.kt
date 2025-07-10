@@ -8,8 +8,9 @@ class LinuxFFmpegProvider : FFmpegProvider() {
     val ffmpegFile: File = File(ffmpegPath)
 
     init {
-        if (!ffmpegFile.exists())
-            throw Exception("FFmpeg не был найден по пути: $ffmpegPath. Установите FFmpeg и убедитесь, что он доступен в системе.")
+        require(ffmpegFile.exists()) {
+            "FFmpeg не был найден по пути: $ffmpegPath. Установите FFmpeg и убедитесь, что он доступен в системе."
+        }
     }
 
     override fun mux(inPath: File, outPath: File) {
