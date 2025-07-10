@@ -2,7 +2,7 @@ package ru.nnedition.ymdownloader
 
 import ru.nnedition.ymdownloader.api.YandexMusicClient
 import ru.nnedition.ymdownloader.api.YandexMusicDownloader
-import ru.nnedition.ymdownloader.api.link.LinkInfo
+import ru.nnedition.ymdownloader.api.ffmpeg.LinuxFFmpegProvider
 import ru.nnedition.ymdownloader.api.link.LinkParser
 import ru.nnedition.ymdownloader.api.link.LinkType
 import java.util.Scanner
@@ -10,10 +10,12 @@ import java.util.Scanner
 object Main {
     val config = TomlConfig()
     val ymClient = YandexMusicClient.create(config.token)
-    val downloader = YandexMusicDownloader(config, ymClient)
+    lateinit var downloader: YandexMusicDownloader
 
     @JvmStatic
     fun main(args: Array<String>) {
+        downloader = YandexMusicDownloader(config, ymClient, LinuxFFmpegProvider())
+
 
         val input = Scanner(System.`in`)
         while (true) {

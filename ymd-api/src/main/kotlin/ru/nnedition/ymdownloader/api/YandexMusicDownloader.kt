@@ -5,6 +5,7 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.ffmpeg.FFmpegProvider
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.Artist
@@ -13,7 +14,6 @@ import ru.nnedition.ymdownloader.api.utils.GenreTranslator
 import ru.nnedition.ymdownloader.api.utils.createDir
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.crypto.Cipher
@@ -23,8 +23,9 @@ import javax.crypto.spec.SecretKeySpec
 class YandexMusicDownloader(
     val config: Config,
     val ymClient: YandexMusicClient,
+    val ffmpeg: FFmpegProvider
 ) {
-    constructor(config: Config) : this(config, YandexMusicClient.create(config.token))
+    constructor(config: Config, ffmpeg: FFmpegProvider) : this(config, YandexMusicClient.create(config.token), ffmpeg)
 
     val logger = logger(this::class)
 
@@ -99,19 +100,18 @@ class YandexMusicDownloader(
         connection.readTimeout = 10_000
 
         if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            val inputStream = connection.inputStream
 
             FileOutputStream(outputFile).use { output ->
-                output.write(decryptTrack(inputStream.readAllBytes(), info.key))
+                output.write(decryptTrack(connection.inputStream.readAllBytes(), info.key))
             }
 
         } else {
             connection.disconnect()
-            throw Exception("Error while file fownload: ${connection.responseCode} ${connection.responseMessage}")
+            throw Exception("Ошибка при загрузке файла: ${connection.responseCode} ${connection.responseMessage}")
         }
 
         try {
-            mux(outputFile, finalFile, File("/usr/bin/ffmpeg"))
+            ffmpeg.mux(outputFile, finalFile)
             outputFile.delete()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -172,23 +172,5 @@ class YandexMusicDownloader(
         cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
 
         return cipher.doFinal(encData)
-    }
-
-    fun mux(inPath: File, outPath: File, ffmpegPath: File) {
-        val process = ProcessBuilder(
-            ffmpegPath.absolutePath,
-            "-i",
-            inPath.absolutePath,
-            "-c:a",
-            "copy",
-            outPath.absolutePath
-        ).start()
-
-        val exitCode = process.waitFor()
-
-        if (exitCode != 0) {
-            val errorOutput = process.errorStream.bufferedReader().readText()
-            throw IOException("ffmpeg failed: $errorOutput")
-        }
     }
 }
