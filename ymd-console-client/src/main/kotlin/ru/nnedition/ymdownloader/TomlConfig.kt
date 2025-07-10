@@ -17,34 +17,20 @@ data class TomlConfig(private val fileName: String = "config.toml") : Config(
     trackTemplate = "{track_num_pad}. {title}",
     getOriginalCovers = false,
     writeLyrics = true,
-    useFfmpegEnvVar = false,
+    ffmpegPath = "",
 ) {
     init {
         val configFile = File(fileName)
         if (!configFile.exists()) {
-            saveDefaults()
+            save()
         } else {
             load()
+            save()
         }
     }
 
-    private fun saveDefaults() {
-        val configMap = mapOf(
-            "format" to quality.num,
-            "keep_covers" to keepCovers,
-            "out_path" to outPath,
-            "token" to token,
-            "sleep" to sleep,
-            "write_covers" to writeCovers,
-            "album_template" to albumTemplate,
-            "track_template" to trackTemplate,
-            "get_original_covers" to getOriginalCovers,
-            "write_lyrics" to writeLyrics,
-            "use_ffmpeg_env_var" to useFfmpegEnvVar
-        )
-
-        val writer = TomlWriter()
-        writer.write(configMap, File(fileName))
+    fun save() {
+        TomlWriter().write(getConfigMap(), File(fileName))
     }
 
     private fun load() {
@@ -62,6 +48,20 @@ data class TomlConfig(private val fileName: String = "config.toml") : Config(
         this.trackTemplate = toml.getString("track_template") ?: this.trackTemplate
         this.getOriginalCovers = toml.getBoolean("get_original_covers") ?: this.getOriginalCovers
         this.writeLyrics = toml.getBoolean("write_lyrics") ?: this.writeLyrics
-        this.useFfmpegEnvVar = toml.getBoolean("use_ffmpeg_env_var") ?: this.useFfmpegEnvVar
+        this.ffmpegPath = toml.getString("ffmpeg_path") ?: this.ffmpegPath
     }
+
+    private fun getConfigMap(): Map<String, Any> = mapOf(
+        "format" to quality.num,
+        "keep_covers" to keepCovers,
+        "out_path" to outPath,
+        "token" to token,
+        "sleep" to sleep,
+        "write_covers" to writeCovers,
+        "album_template" to albumTemplate,
+        "track_template" to trackTemplate,
+        "get_original_covers" to getOriginalCovers,
+        "write_lyrics" to writeLyrics,
+        "ffmpeg_path" to ffmpegPath
+    )
 }

@@ -1,11 +1,16 @@
 package ru.nnedition.ymdownloader
 
+import oshi.PlatformEnum
+import oshi.SystemInfo
 import ru.nnedition.ymdownloader.api.YandexMusicClient
 import ru.nnedition.ymdownloader.api.YandexMusicDownloader
-import ru.nnedition.ymdownloader.api.ffmpeg.LinuxFFmpegProvider
+import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
+import ru.nnedition.ymdownloader.api.ffmpeg.FileFfmpegProvider
+import ru.nnedition.ymdownloader.api.ffmpeg.LinuxFfmpegProvider
 import ru.nnedition.ymdownloader.api.link.LinkParser
 import ru.nnedition.ymdownloader.api.link.LinkType
 import java.util.Scanner
+import kotlin.system.exitProcess
 
 object Main {
     val config = TomlConfig()
@@ -14,8 +19,50 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        downloader = YandexMusicDownloader(config, ymClient, LinuxFFmpegProvider())
+        var ffmpegProvider: FfmpegProvider? = null
 
+        try {
+            ffmpegProvider = try {
+                FileFfmpegProvider(config.ffmpegPath)
+            } catch (e: Exception) {
+                when (SystemInfo.getCurrentPlatform()) {
+                    PlatformEnum.LINUX -> LinuxFfmpegProvider()
+                    else -> throw Exception("Неизвестная платформа: ${SystemInfo.getCurrentPlatform()}.")
+                }
+            }
+        } catch (e: Exception) {
+            println(e.message)
+
+            val input = Scanner(System.`in`)
+
+            while (ffmpegProvider == null) {
+                println("Пожалуйста, укажите путь к ffmpeg или \"stop\", чтобы остановить программу: ")
+
+                val text = input.nextLine()
+
+                if (text == "stop") {
+                    println("Остановка программы...")
+                    exitProcess(0)
+                }
+
+                try {
+                    ffmpegProvider = FileFfmpegProvider(text)
+                    config.ffmpegPath = text
+                    config.save()
+                    println("Успешно! Путь к ffmpeg сохранен.")
+                } catch (e: Exception) {
+                    println("Ошибка при инициализации ffmpeg: ${e.message}. Попробуйте еще раз.")
+                }
+            }
+
+            input.close()
+        }
+
+        downloader = YandexMusicDownloader(
+            config,
+            ymClient,
+            ffmpegProvider
+        )
 
         val input = Scanner(System.`in`)
         while (true) {

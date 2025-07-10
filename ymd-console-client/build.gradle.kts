@@ -7,6 +7,8 @@ dependencies {
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("org.slf4j:slf4j-api:2.0.17")
     implementation("com.github.nnikitochka:YetAnotherLogger:1.1")
+
+    implementation("com.github.oshi:oshi-core:6.8.2")
 }
 
 tasks {
