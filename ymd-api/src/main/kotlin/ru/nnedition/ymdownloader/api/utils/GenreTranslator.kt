@@ -18,6 +18,7 @@ object GenreTranslator {
         "classicmetal" to "Классический метал",
         "rap" to "Рэп",
         "allrock" to "Рок",
+        "punk" to "Панк рок",
     )
 
     fun translate(genre: String) = genres[genre]
