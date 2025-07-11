@@ -14,7 +14,7 @@ import kotlin.system.exitProcess
 
 object Main {
     val config = TomlConfig()
-    val ymClient = YandexMusicClient.create(config.token)
+    lateinit var ymClient: YandexMusicClient
     lateinit var downloader: YandexMusicDownloader
 
     @JvmStatic
@@ -57,6 +57,8 @@ object Main {
 
             input.close()
         }
+
+        ymClient = YandexMusicClient.create(config.token)
 
         downloader = YandexMusicDownloader(
             config,
