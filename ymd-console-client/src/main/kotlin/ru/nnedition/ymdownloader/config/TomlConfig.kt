@@ -1,4 +1,4 @@
-package ru.nnedition.ymdownloader
+package ru.nnedition.ymdownloader.config
 
 import com.moandjiezana.toml.Toml
 import com.moandjiezana.toml.TomlWriter
@@ -37,8 +37,8 @@ data class TomlConfig(private val fileName: String = "config.toml") : Config(
         val toml = Toml().read(File(fileName))
 
         this.token = toml.getString("token") ?: this.token
-        this.quality = toml.getLong("format")?.toInt()?.let {
-            Quality.fromInt(it)
+        this.quality = toml.getLong("quality")?.toInt()?.let {
+            Quality.Companion.fromInt(it)
         } ?: this.quality
         this.keepCovers = toml.getBoolean("keep_covers") ?: this.keepCovers
         this.outPath = toml.getString("out_path") ?: this.outPath
@@ -52,7 +52,7 @@ data class TomlConfig(private val fileName: String = "config.toml") : Config(
     }
 
     private fun getConfigMap(): Map<String, Any> = mapOf(
-        "format" to quality.num,
+        "quality" to quality.num,
         "keep_covers" to keepCovers,
         "out_path" to outPath,
         "token" to token,
