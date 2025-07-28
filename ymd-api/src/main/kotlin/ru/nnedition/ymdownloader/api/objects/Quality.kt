@@ -12,7 +12,8 @@ enum class Quality(
     override fun toString() = shortName
 
     companion object {
-        private val valueMap = entries.associateBy { it.num }
-        fun fromInt(value: Int): Quality? = valueMap[value]
+        fun fromInt(value: Int): Quality? = entries.associateBy { it.num }[value]
+
+        fun fromShort(value: String): Quality? = entries.associateBy { it.shortName }[value]
     }
 }
