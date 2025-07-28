@@ -44,10 +44,10 @@ open class FileFfmpegProvider(
      * @return true, если файл является корректным ffmpeg, иначе false.
      */
     fun isFFmpeg(): Boolean {
-        if (!ffmpegFile.exists() || !ffmpegFile.canExecute()) return false
+        if (!this.ffmpegFile.exists() || !this.ffmpegFile.canExecute()) return false
 
         return try {
-            val process = Runtime.getRuntime().exec(arrayOf(ffmpegFile.path, "-version"))
+            val process = Runtime.getRuntime().exec(arrayOf(this.ffmpegFile.path, "-version"))
             val reader = process.inputStream.bufferedReader()
             val output = reader.readText()
             reader.close()
