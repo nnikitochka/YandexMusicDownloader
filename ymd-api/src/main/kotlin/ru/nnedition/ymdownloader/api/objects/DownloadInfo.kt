@@ -1,10 +1,7 @@
 package ru.nnedition.ymdownloader.api.objects
 
 data class DownloadInfo(
-    val url: String,
-    val codec: String,
-    val bitrate: Int,
+    val quality: Quality,
     val key: String,
-    val gain: Boolean,
-    val preview: Boolean
+    val url: String,
 )
