@@ -35,7 +35,7 @@ object AudioTagWriter {
             tag.setField(FieldKey.TITLE, track.title)
             tag.setField(FieldKey.ALBUM, album.title)
             tag.setField(FieldKey.YEAR, album.year.toString())
-            tag.setField(FieldKey.ARTIST, album.artists.joinToString(", ") { it.name })
+            tag.setField(FieldKey.ARTIST, track.artists.joinToString(", ") { it.name })
 
             val genre = track.genre ?: album.genre
             val translatedGenre = GenreTranslator.translate(genre) ?: let {
