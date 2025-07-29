@@ -21,7 +21,6 @@ import javax.crypto.spec.SecretKeySpec
 class YandexMusicClient private constructor(
     private val client: OkHttpClient,
     private val oauthToken: String,
-    var login: String
 ) {
     fun getUserInfo(): UserInfo {
         val request = Request.Builder()
@@ -42,6 +41,25 @@ class YandexMusicClient private constructor(
         private const val YANDEX_USER_AGENT = "YandexMusicDesktopAppWindows/5.54.0"
         private const val SECRET = "kzqU4XhfCaY6B6JTHODeq5"
 
+        fun validateToken(token: String): Result<Boolean> {
+            return try {
+                val request = Request.Builder()
+                    .url("https://api.music.yandex.net/account/status")
+                    .get()
+                    .addHeader("Authorization", "OAuth $token")
+                    .build()
+
+                val response = OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build().newCall(request).execute()
+
+                Result.success(response.isSuccessful)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
         fun create(config: IConfiguration) = create(config.token)
         fun create(token: String): YandexMusicClient {
             val client = OkHttpClient.Builder()
@@ -60,12 +78,7 @@ class YandexMusicClient private constructor(
             val yandexClient = YandexMusicClient(
                 client = client,
                 oauthToken = oauthToken,
-                login = ""
             )
-
-            val userInfo = yandexClient.getUserInfo()
-
-            yandexClient.login = userInfo.login
 
             return yandexClient
         }
