@@ -4,7 +4,7 @@ import nn.edition.yalogger.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.audio.flac.FlacInfoReader
 import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.images.ArtworkFactory
+import org.jaudiotagger.tag.images.StandardArtwork
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import java.io.File
@@ -24,7 +24,7 @@ object AudioTagWriter {
 
     fun write(
         file: File,
-        coverFile: File?,
+        cover: ByteArray?,
         track: Track,
         album: Album,
     ) {
@@ -45,10 +45,11 @@ object AudioTagWriter {
 
             tag.setField(FieldKey.GENRE, translatedGenre)
 
-            coverFile?.let {
-                val artwork = ArtworkFactory.createArtworkFromFile(coverFile)
-                artwork.pictureType = 0
-                artwork.description = "Album cover"
+            cover?.let {
+                val artwork = StandardArtwork()
+                artwork.binaryData = cover
+                artwork.pictureType = 3
+                artwork.description = "Обложка альбома"
 
                 tag.setField(artwork)
             }
