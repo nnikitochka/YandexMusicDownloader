@@ -9,7 +9,7 @@ data class Album(
     val title: String,
     val year: Int,
     val coverUri: String,
-    val genre: String = "none",
+    val genre: String?,
     val artists: List<ArtistMeta>,
     val available: Boolean,
     @SerializedName("volumes")
