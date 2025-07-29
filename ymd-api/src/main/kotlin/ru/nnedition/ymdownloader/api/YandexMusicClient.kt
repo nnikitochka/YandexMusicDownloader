@@ -54,6 +54,8 @@ class YandexMusicClient private constructor(
                     .readTimeout(30, TimeUnit.SECONDS)
                     .build().newCall(request).execute()
 
+                response.body?.close()
+
                 Result.success(response.isSuccessful)
             } catch (e: Exception) {
                 Result.failure(e)
