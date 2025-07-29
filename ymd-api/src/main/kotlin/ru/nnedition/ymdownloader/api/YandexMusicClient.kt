@@ -6,7 +6,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
-import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.UserInfo
@@ -14,6 +14,7 @@ import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.time.Instant
 import java.util.Base64
+import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -41,9 +42,11 @@ class YandexMusicClient private constructor(
         private const val YANDEX_USER_AGENT = "YandexMusicDesktopAppWindows/5.54.0"
         private const val SECRET = "kzqU4XhfCaY6B6JTHODeq5"
 
-        fun create(config: Config) = create(config.token)
+        fun create(config: IConfiguration) = create(config.token)
         fun create(token: String): YandexMusicClient {
             val client = OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor { chain ->
                     val originalRequest = chain.request()
                     val requestWithUserAgent = originalRequest.newBuilder()
@@ -61,8 +64,6 @@ class YandexMusicClient private constructor(
             )
 
             val userInfo = yandexClient.getUserInfo()
-            if (!userInfo.hasPlus)
-                throw IllegalStateException("active plus subscription required")
 
             yandexClient.login = userInfo.login
 
@@ -165,6 +166,7 @@ class YandexMusicClient private constructor(
         }
     }
 
+    val covers: MutableMap<String, ByteArray> = HashMap()
     fun getCoverData(
         url: String,
         original: Boolean,
@@ -172,23 +174,19 @@ class YandexMusicClient private constructor(
         // Максимально доступное разрешение
         quality: String = "800x800"
     ): ByteArray {
-        val toReplace = if (original) "/orig" else "/$quality"
-        val replacedUrl = url.replace("/%%", toReplace)
-        val fullUrl = "https://$replacedUrl"
+        val fullUrl = "https://${url.replace("/%%", if (original) "/orig" else "/$quality")}"
 
-        val request = Request.Builder()
-            .url(fullUrl)
+        return covers.getOrPut(fullUrl) {
+            val request = Request.Builder()
+                .url(fullUrl)
+                .apply { if (withRange) addHeader("Range", "bytes=0-") }
+                .build()
 
-        if (withRange)
-            request.addHeader("Range", "bytes=0-")
-
-        val response = client.newCall(request.build()).execute()
-
-        if (!response.isSuccessful)
-            throw okio.IOException("HTTP error: ${response.code}")
-
-        response.use { resp ->
-            return resp.body?.bytes() ?: throw okio.IOException("Empty response body")
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful)
+                    throw okio.IOException("HTTP error: ${response.code}")
+                response.body?.bytes() ?: throw okio.IOException("Empty response body")
+            }
         }
     }
 }
