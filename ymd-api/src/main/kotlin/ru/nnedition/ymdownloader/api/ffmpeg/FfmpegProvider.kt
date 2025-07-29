@@ -9,8 +9,15 @@ import java.io.File
 interface FfmpegProvider {
     /**
      * Выполняет извлечение аудио-дорожки из видео файла с использованием ffmpeg.
-     * @param inPath Путь к входному аудиофайлу.
-     * @param outPath Путь к выходному аудиофайлу.
+     * @param input Входной видеофайл.
+     * @param output Выходной аудиофайл.
      */
-    fun mux(inPath: File, outPath: File)
+    fun mux(input: File, output: File)
+
+    /**
+     * Выполняет конвертацию с использованием ffmpeg.
+     * @param input Входной аудиофайл.
+     * @param output Выходной аудиофайл.
+     */
+    fun convert(input: File, output: File)
 }

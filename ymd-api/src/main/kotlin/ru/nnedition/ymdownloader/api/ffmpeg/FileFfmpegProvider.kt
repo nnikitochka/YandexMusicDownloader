@@ -19,16 +19,45 @@ open class FileFfmpegProvider(
     }
 
     /**
+     * @throws IllegalArgumentException Если входной и выходной файлы одинаковые.
      * @throws IOException Если произошла ошибка при выполнении ffmpeg.
      */
-    override fun mux(inPath: File, outPath: File) {
+    override fun mux(input: File, output: File) {
+        require(input.absolutePath != output.absolutePath) {
+            "Входной и выходной файлы должны отличаться!"
+        }
+
         val process = ProcessBuilder(
             ffmpegFile.absolutePath,
             "-i",
-            inPath.absolutePath,
+            input.absolutePath,
             "-c:a",
             "copy",
-            outPath.absolutePath
+            output.absolutePath
+        ).start()
+
+        val exitCode = process.waitFor()
+
+        if (exitCode != 0) {
+            val errorOutput = process.errorStream.bufferedReader().readText()
+            throw IOException("ffmpeg failed: $errorOutput")
+        }
+    }
+
+    /**
+     * @throws IllegalArgumentException Если входной и выходной файлы одинаковые.
+     * @throws IOException Если произошла ошибка при выполнении ffmpeg.
+     */
+    override fun convert(input: File, output: File) {
+        require(input.absolutePath != output.absolutePath) {
+            "Входной и выходной файлы должны отличаться!"
+        }
+
+        val process = ProcessBuilder(
+            ffmpegFile.absolutePath,
+            "-i",
+            input.absolutePath,
+            output.absolutePath
         ).start()
 
         val exitCode = process.waitFor()
