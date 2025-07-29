@@ -1,16 +1,14 @@
 package ru.nnedition.ymdownloader.api
 
 import nn.edition.yalogger.logger
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.images.ArtworkFactory
-import ru.nnedition.ymdownloader.api.config.Config
+import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
+import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.Artist
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
-import ru.nnedition.ymdownloader.api.utils.GenreTranslator
+import ru.nnedition.ymdownloader.api.utils.AudioTagWriter
 import ru.nnedition.ymdownloader.api.utils.createDir
 import java.io.File
 import java.io.FileOutputStream
@@ -21,156 +19,174 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 class YandexMusicDownloader(
-    val config: Config,
+    val config: IConfiguration,
     val ymClient: YandexMusicClient,
     val ffmpeg: FfmpegProvider
 ) {
-    constructor(config: Config, ffmpeg: FfmpegProvider) : this(config, YandexMusicClient.create(config.token), ffmpeg)
+    constructor(config: IConfiguration, ffmpeg: FfmpegProvider) : this(config, YandexMusicClient.create(config.token), ffmpeg)
 
     val logger = logger(this::class)
 
-    fun downloadArtist(artistId: Long, config: Config) {
-        val artist = ymClient.getArtist(artistId)
-        logger.info("Starting processing artist \"${artist.artist.name}\"")
+    fun downloadArtist(artistId: Long, config: IConfiguration) {
+        val artist = this.ymClient.getArtist(artistId)
+
+        this.logger.info("Обработка артиста \"${artist.artist.name}\"...")
+
         artist.albums.forEach { album ->
             downloadAlbum(album.id, config)
         }
     }
 
-    fun downloadAlbum(albumId: Long, config: Config) {
-        val album = ymClient.getAlbum(albumId)
+    fun downloadAlbum(albumId: Long, config: IConfiguration) {
+        downloadAlbum(this.ymClient.getAlbum(albumId), config)
+    }
 
+    fun downloadAlbum(album: Album, config: IConfiguration) {
         if (!album.available)
-            throw Exception("Album \"$albumId\" not available")
+            throw Exception("Альбом \"${album.title}\" недоступен")
 
-        logger.info("Starting processing album \"${album.title}\"")
+        this.logger.info("Обработка альбома \"${album.title}\"...")
 
         album.tracks[0].forEach { track ->
             downloadTrack(track, album, album.artists[0], config)
         }
     }
 
-    fun downloadAlbum(album: Album) {
-        album.tracks[0].forEach { track ->
-            downloadTrack(track, album, album.artists[0], config)
-        }
-    }
-
-    fun downloadTrack(trackId: Long, config: Config) {
-        val track = ymClient.getTrack(trackId)
+    fun downloadTrack(trackId: Long, config: IConfiguration) {
+        val track = this.ymClient.getTrack(trackId)
 
         if (!track.available)
-            throw Exception("Track \"$trackId\" not available")
+            throw Exception("Трек \"${track.title}\" недоступен")
 
         downloadTrack(track, track.albums[0], track.artists[0], config)
     }
 
     fun downloadTrack(
-        track: Track, album: Album, publisher: Artist, config: Config
+        track: Track, album: Album, publisher: Artist, config: IConfiguration
     ) = downloadTrack(track, album, ArtistMeta(publisher.id, publisher.name), config)
 
     fun downloadTrack(
-        track: Track, album: Album, publisher: ArtistMeta, config: Config
+        track: Track, album: Album, publisher: ArtistMeta, config: IConfiguration
     ) {
-        if (!track.available) return
+        if (!track.available)
+            throw Exception("Трек \"${track.title}\" недоступен")
 
-        logger.info("Starting processing track \"${track.title}\"")
+        this.logger.info("Обработка трека \"${track.title}\"...")
 
-        val info = ymClient.getFileInfo(track.id.toString(), config.quality.toString())
+        val info = this.ymClient.getFileInfo(track.id.toString(), config.quality.toString())
 
-        val allPath = File(config.outPath).createDir()
-        val artistPath = File(allPath, publisher.name).createDir()
-        val albumPath = File(artistPath, album.title).createDir()
+        val format = if (info.codec.contains("-")) {
+            val parts = info.codec.split("-")
+            if (parts[0] == "he") parts[1]
+            else parts[0]
+        }
+        else info.codec
 
-        val fileName = "${publisher.name} — ${track.title}"
+        val path = File(config.outPath.parsePathPlaceholders(publisher, album, track)).createDir()
 
-        val finalFile = File(albumPath, "$fileName.flac")
+        val fileName = config.trackTemplate.parsePlaceholders(publisher, album, track)
+
+        var finalFile = File(path, "$fileName.$format")
 
         if (finalFile.exists()) {
-            logger.info("Track \"$fileName\" already exists.")
+            logger.info("Трек \"$fileName\" уже существует.")
             return
         }
 
-        val outputFile = File(albumPath, "$fileName.mp4")
+        val outputFile = File(path, "$fileName.mp4")
 
-        val url = URL(info.url)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = 10_000
-        connection.readTimeout = 10_000
-
-        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-
-            FileOutputStream(outputFile).use { output ->
-                output.write(decryptTrack(connection.inputStream.readAllBytes(), info.key))
-            }
-
-        } else {
-            connection.disconnect()
-            throw Exception("Ошибка при загрузке файла: ${connection.responseCode} ${connection.responseMessage}")
+        try {
+            downloadTrack(info, outputFile)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            outputFile.delete()
+            return
         }
 
         try {
-            ffmpeg.mux(outputFile, finalFile)
+            this.ffmpeg.mux(outputFile, finalFile)
             outputFile.delete()
         } catch (e: Exception) {
             e.printStackTrace()
+            outputFile.delete()
+            finalFile.delete()
             return
         }
 
-        try {
-            val audioFile = AudioFileIO.read(finalFile)
-            val tag = audioFile.tagOrCreateAndSetDefault
+        if (format == "aac") {
+            val interimFile = File(path, "$fileName.flac")
 
-            tag.setField(FieldKey.TITLE, track.title)
-            tag.setField(FieldKey.ALBUM, album.title)
-            tag.setField(FieldKey.YEAR, album.year.toString())
-            tag.setField(FieldKey.ARTIST, album.artists.joinToString(", ") { it.name })
-
-            val genre = track.genre ?: album.genre
-            val translatedGenre = GenreTranslator.translate(genre) ?: let {
-                logger.warn("Найден неизвестный жанр: \"$genre\"")
-                genre
+            if (interimFile.exists()) {
+                logger.info("Трек \"$fileName\" уже существует.")
+                finalFile.delete()
+                return
             }
 
-            tag.setField(FieldKey.GENRE, translatedGenre)
+            this.ffmpeg.convert(finalFile, interimFile)
+            finalFile.delete()
+            finalFile = interimFile
+        }
 
-            val coverFile = File(albumPath, "$fileName.jpeg")
-            FileOutputStream(coverFile).use { output ->
-                output.write(ymClient.getCoverData(track.coverUri, false, false, "300x300"))
+        val cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300")
+
+        AudioTagWriter.write(
+            finalFile,
+            cover,
+            track,
+            album
+        )
+    }
+
+    fun downloadTrack(info: DownloadInfo, outputFile: File) {
+        val url = URL(info.url)
+        val connect = url.openConnection() as HttpURLConnection
+        connect.requestMethod = "GET"
+        connect.connectTimeout = 20_000
+        connect.readTimeout = 20_000
+
+        if (connect.responseCode == HttpURLConnection.HTTP_OK) {
+            FileOutputStream(outputFile).use { output ->
+                output.write(decryptTrack(connect.inputStream.readAllBytes(), info.key))
             }
-
-            val artwork = ArtworkFactory.createArtworkFromFile(coverFile)
-            artwork.pictureType = 0
-            artwork.description = "Album cover"
-
-            tag.setField(artwork)
-
-            audioFile.commit()
-
-            coverFile.delete()
-
-        } catch (ex: Exception) {
-            ex.printStackTrace()
+            connect.disconnect()
+        } else {
+            connect.disconnect()
+            throw Exception("Ошибка при загрузке файла: ${connect.responseCode} ${connect.responseMessage}")
         }
     }
 
-    fun decryptTrack(encData: ByteArray, key: String): ByteArray {
-        val keyBytes = key.chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
+    companion object {
+        fun String.parsePlaceholders(
+            publisher: ArtistMeta,
+            album: Album,
+            track: Track,
+            transform: (String) -> String = { it.fixPath() }
+        ): String = this.replace("%author_name%", transform(publisher.name))
+                .replace("%album_title%", transform(album.title))
+                .replace("%track_title%", transform(track.title))
 
-        if (keyBytes.size != 16)
-            throw IllegalArgumentException("Key must be 16 bytes")
+        fun String.parsePathPlaceholders(publisher: ArtistMeta, album: Album, track: Track): String =
+            parsePlaceholders(publisher, album, track) { it.fixPath() }
 
-        val nonce = ByteArray(16) { 0 }
+        private fun String.fixPath() = replace("/", "\\")
 
-        val cipher = Cipher.getInstance("AES/CTR/NoPadding")
-        val secretKey = SecretKeySpec(keyBytes, "AES")
-        val ivSpec = IvParameterSpec(nonce)
+        fun decryptTrack(encData: ByteArray, key: String): ByteArray {
+            val keyBytes = key.chunked(2)
+                .map { it.toInt(16).toByte() }
+                .toByteArray()
 
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+            if (keyBytes.size != 16)
+                throw IllegalArgumentException("Key must be 16 bytes")
 
-        return cipher.doFinal(encData)
+            val nonce = ByteArray(16) { 0 }
+
+            val cipher = Cipher.getInstance("AES/CTR/NoPadding")
+            val secretKey = SecretKeySpec(keyBytes, "AES")
+            val ivSpec = IvParameterSpec(nonce)
+
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+
+            return cipher.doFinal(encData)
+        }
     }
 }
