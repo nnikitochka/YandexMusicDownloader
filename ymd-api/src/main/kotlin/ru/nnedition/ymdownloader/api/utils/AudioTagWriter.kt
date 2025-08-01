@@ -27,6 +27,7 @@ object AudioTagWriter {
         cover: ByteArray?,
         track: Track,
         album: Album,
+        genre: String?,
     ) {
         try {
             val audioFile = AudioFileIO.read(file)
@@ -37,13 +38,8 @@ object AudioTagWriter {
             tag.setField(FieldKey.YEAR, album.year.toString())
             tag.setField(FieldKey.ARTIST, track.artists.joinToString(", ") { it.name })
 
-            (track.genre ?: album.genre)?.let { genre ->
-                val translatedGenre = GenreTranslator.translate(genre) ?: let {
-                    logger.warn("Найден неизвестный жанр: \"$genre\"")
-                    genre
-                }
-
-                tag.setField(FieldKey.GENRE, translatedGenre)
+            genre?.let {
+                tag.setField(FieldKey.GENRE, it)
             }
 
             cover?.let {
