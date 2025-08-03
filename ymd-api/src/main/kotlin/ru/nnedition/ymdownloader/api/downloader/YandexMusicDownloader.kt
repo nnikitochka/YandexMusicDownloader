@@ -63,7 +63,7 @@ class YandexMusicDownloader(
         var finalFile = File(path, "$fileName.$format")
 
         if (finalFile.exists()) {
-            logger.info("Трек \"$fileName\" уже существует.")
+            logger.info("Трек \"${track.title}\" уже существует.")
             return
         }
 
@@ -72,8 +72,8 @@ class YandexMusicDownloader(
         try {
             downloadTrack(info, outputFile)
         } catch (e: Exception) {
-            e.printStackTrace()
             outputFile.delete()
+            e.printStackTrace()
             return
         }
 
@@ -81,9 +81,9 @@ class YandexMusicDownloader(
             this.ffmpeg.mux(outputFile, finalFile)
             outputFile.delete()
         } catch (e: Exception) {
-            e.printStackTrace()
             outputFile.delete()
             finalFile.delete()
+            e.printStackTrace()
             return
         }
 
@@ -105,7 +105,7 @@ class YandexMusicDownloader(
 
         val genre = (track.genre ?: album.genre)?.let { genre ->
             GenreTranslator.translate(genre) ?: let {
-                AudioTagWriter.logger.warn("Найден неизвестный жанр: \"$genre\"")
+                logger.warn("Найден неизвестный жанр: \"$genre\"")
                 genre
             }
         }

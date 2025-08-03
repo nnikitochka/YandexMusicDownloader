@@ -41,7 +41,7 @@ abstract class AbstractMusicDownloader(
 
         fun String.parseFilePlaceholders(publisher: ArtistMeta, album: Album, track: Track) = filePlaceholders(publisher, album, track)
             .entries.fold(this) { currentText, (key, value) ->
-                currentText.replace(key, value)
+                currentText.replace(key, value.fixPath())
             }
 
         fun placeholders(publisher: ArtistMeta, album: Album, track: Track) = mapOf(
@@ -53,8 +53,8 @@ abstract class AbstractMusicDownloader(
         fun pathPlaceholders(publisher: ArtistMeta, album: Album, track: Track) = placeholders(publisher, album, track)
 
         fun filePlaceholders(publisher: ArtistMeta, album: Album, track: Track) =
-            placeholders(publisher, album, track).toMutableMap().also {
-                it.put("%track_num%", album.tracks[0].indexOf(track).toString())
+            placeholders(publisher, album, track).toMutableMap().also { places ->
+                places.put("%track_num%", (album.tracks[0].indexOf(album.tracks[0].find { it.id == track.id })+1).toString())
             }
 
         private fun String.fixPath() = replace("/", "\\")
@@ -77,6 +77,8 @@ abstract class AbstractMusicDownloader(
             }
         }
 
+        val cipher = Cipher.getInstance("AES/CTR/NoPadding")
+
         fun decryptTrack(encData: ByteArray, key: String): ByteArray {
             val keyBytes = key.chunked(2)
                 .map { it.toInt(16).toByte() }
@@ -87,13 +89,12 @@ abstract class AbstractMusicDownloader(
 
             val nonce = ByteArray(16) { 0 }
 
-            val cipher = Cipher.getInstance("AES/CTR/NoPadding")
             val secretKey = SecretKeySpec(keyBytes, "AES")
             val ivSpec = IvParameterSpec(nonce)
 
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+            this.cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
 
-            return cipher.doFinal(encData)
+            return this.cipher.doFinal(encData)
         }
     }
 }
