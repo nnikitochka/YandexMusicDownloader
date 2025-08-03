@@ -37,7 +37,7 @@ data class TomlConfig(
 
         this.token = toml.getString("token") ?: this.token
         this.quality = toml.getLong("quality")?.toInt()?.let {
-            Quality.Companion.fromInt(it)
+            Quality.fromInt(it)
         } ?: this.quality
         this.keepCovers = toml.getBoolean("keep_covers") ?: this.keepCovers
         this.outPath = toml.getString("out_path") ?: this.outPath

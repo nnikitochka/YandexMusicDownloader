@@ -9,6 +9,8 @@ dependencies {
     implementation("com.github.nnikitochka:YetAnotherLogger:1.1")
 
     implementation("com.github.oshi:oshi-core:6.8.2")
+
+    implementation("org.jline:jline:3.26.1")
 }
 
 tasks {
@@ -26,7 +28,7 @@ tasks {
         archiveFileName.set("YandexMusicDownloader.jar")
 
         manifest {
-            attributes["Main-Class"] = "ru.nnedition.ymdownloader.Main"
+            attributes["Main-Class"] = "ru.nnedition.ymdownloader.Launcher"
             attributes["Implementation-Title"] = "YandexMusicDownloader"
             attributes["Implementation-Version"] = version
         }
