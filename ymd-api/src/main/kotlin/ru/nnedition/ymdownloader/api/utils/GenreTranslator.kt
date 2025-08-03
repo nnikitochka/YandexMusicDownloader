@@ -41,8 +41,10 @@ object GenreTranslator {
         this.translationsFile.writeText(json)
     }
 
-    fun saveTranslation(translation: Pair<String, String>) {
-        genres.put(translation.first, translation.second)
+    fun saveTranslation(translation: Pair<String, String>) =
+        saveTranslation(translation.first, translation.second)
+    fun saveTranslation(genre: String, translation: String) {
+        genres.put(genre, translation)
     }
 
     fun translate(genre: String) = this.genres[genre]
