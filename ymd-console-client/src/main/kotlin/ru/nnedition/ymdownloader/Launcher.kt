@@ -26,7 +26,6 @@ object Launcher {
     @JvmStatic
     fun main(args: Array<String>) {
         LoggerFactory.logFormat = "{message}"
-        LoggerFactory.terminalWriter = terminal
 
         val ffmpegProvider = getFfmpegProvider()
 
@@ -55,10 +54,10 @@ object Launcher {
         this.logger.info("Инициализация загрузчика прошла успешно.")
 
         println("Введите ссылку или \"stop\", чтобы остановить программу: ")
+        LoggerFactory.terminalWriter = terminal
         terminal.start()
 
         Runtime.getRuntime().addShutdownHook(Thread {
-            terminal.close()
             GenreTranslator.foldTranslations()
             println("Спасибо за использование YandexMusicDownloader :>")
         })
@@ -108,6 +107,7 @@ object Launcher {
     }
 
     fun shutdown() {
+        terminal.close()
         exitProcess(0)
     }
 }
