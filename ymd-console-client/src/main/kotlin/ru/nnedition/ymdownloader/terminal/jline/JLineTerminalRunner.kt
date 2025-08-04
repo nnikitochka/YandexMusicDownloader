@@ -9,6 +9,7 @@ import ru.nnedition.ymdownloader.terminal.context.CloseRequestContext
 import ru.nnedition.ymdownloader.terminal.context.GenreSaveConfirmContext
 import ru.nnedition.ymdownloader.terminal.context.GenreSelectContext
 import ru.nnedition.ymdownloader.terminal.context.RunningContext
+import ru.nnedition.ymdownloader.terminal.context.impl.ConfirmTerminalContext
 
 class JLineTerminalRunner(
     val terminal: JLineTerminal
@@ -81,7 +82,7 @@ class JLineTerminalRunner(
                     this.terminal.context = GenreSaveConfirmContext(context.genre, line)
                 }
                 is GenreSaveConfirmContext -> {
-                    if (line == "д" || line == "да" || line == "y" || line === "ye" || line == "yes") {
+                    if (ConfirmTerminalContext.isConfirm(line)) {
                         GenreTranslator.saveTranslation(context.genre, context.translation)
                         this.terminal.context = RunningContext()
                         continue
@@ -91,7 +92,7 @@ class JLineTerminalRunner(
                 }
 
                 is CloseRequestContext -> {
-                    if (line == "д" || line == "да" || line == "y" || line === "ye" || line == "yes") {
+                    if (ConfirmTerminalContext.isConfirm(line)) {
                         Launcher.shutdown()
                         break
                     }
