@@ -12,12 +12,12 @@ import ru.nnedition.ymdownloader.terminal.context.impl.TerminalContext
 import java.nio.charset.StandardCharsets
 
 @Suppress("LeakingThis", "MemberVisibilityCanBePrivate")
-open class JLineTerminal : Terminal {
+class JLineTerminal : Terminal {
     @Volatile
     var context: TerminalContext = RunningContext()
         set(value) {
             field = value
-            runner.updateContext()
+            this.runner.updateContext()
         }
 
     private lateinit var runner: JLineTerminalRunner
@@ -32,31 +32,31 @@ open class JLineTerminal : Terminal {
     val history = DefaultHistory()
 
     val lineReader: LineReader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        .history(history)
+        .terminal(this.terminal)
+        .history(this.history)
 //        .completer(CommandCompleter())
         .build()
 
     override fun start() {
-        runner = JLineTerminalRunner(this)
-        runner.start()
+        this.runner = JLineTerminalRunner(this)
+        this.runner.start()
     }
 
     override fun close() {
-        runner.interrupt()
-        terminal.close()
+        this.runner.interrupt()
+        this.terminal.close()
     }
 
     override fun write(message: String) {
-        terminal.puts(InfoCmp.Capability.carriage_return)
-        terminal.writer().println(message)
+        this.terminal.puts(InfoCmp.Capability.carriage_return)
+        this.terminal.writer().println(message)
         redraw()
     }
 
     private fun redraw() {
-        if (lineReader.isReading) {
-            lineReader.callWidget("redraw-line")
-            lineReader.callWidget("redisplay")
+        if (this.lineReader.isReading) {
+            this.lineReader.callWidget("redraw-line")
+            this.lineReader.callWidget("redisplay")
         }
     }
 }
