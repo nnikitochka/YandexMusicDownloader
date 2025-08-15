@@ -6,6 +6,7 @@ import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 data class Track(
     val id: Long,
     val title: String,
+    val version: String?,
     val available: Boolean,
     val artists: List<ArtistMeta>,
     val albums: List<Album>,

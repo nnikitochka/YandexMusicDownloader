@@ -7,6 +7,7 @@ import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 data class Album(
     val id: Long,
     val title: String,
+    val version: String?,
     val year: Int,
     val coverUri: String,
     val genre: String?,
