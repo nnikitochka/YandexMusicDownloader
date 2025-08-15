@@ -23,6 +23,12 @@ object LinkParser {
                     albumId?.let { LinkInfo(LinkType.ALBUM, it.toLong()) }
                 }
             }
+
+            cleanUrl.contains("/track/") -> {
+                val trackId = extractId(cleanUrl, "/track/")
+                trackId?.let { LinkInfo(LinkType.TRACK, it.toLong()) }
+            }
+
             else -> null
         }
     }
