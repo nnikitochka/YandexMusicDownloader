@@ -8,6 +8,7 @@ import ru.nnedition.ymdownloader.api.utils.GenreTranslator
 import ru.nnedition.ymdownloader.terminal.context.CloseRequestContext
 import ru.nnedition.ymdownloader.terminal.context.GenreSaveConfirmContext
 import ru.nnedition.ymdownloader.terminal.context.GenreSelectContext
+import ru.nnedition.ymdownloader.terminal.context.GenreTranslateContext
 import ru.nnedition.ymdownloader.terminal.context.RunningContext
 import ru.nnedition.ymdownloader.terminal.context.impl.ConfirmTerminalContext
 
@@ -57,17 +58,18 @@ class JLineTerminalRunner(
 
             if (line.isEmpty()) continue
 
-            val context = this.terminal.context
-            when (context) {
+            when (val context = this.terminal.context) {
                 is RunningContext -> {
                     if (line == "stop" || line == "exit" || line == "close") {
                         this.terminal.context = CloseRequestContext()
                         continue
                     }
-                    else if (line == "pause") {
-                        println("Пока не прописал(")
-                        continue
-                    }
+//                    else if (line == "pause") {
+//                        if (!Launcher.downloader.paused) {
+//                            println("Остановка загрузки...")
+//                        }
+//                        continue
+//                    }
 
                     val info = LinkParser.parseUrl(line) ?: run {
                         println("Ссылка не распознана, возможно вы ввели что-то не так :(")
@@ -78,6 +80,10 @@ class JLineTerminalRunner(
                 }
 
                 is GenreSelectContext -> {
+                    context.genre = line
+                    this.terminal.context = RunningContext()
+                }
+                is GenreTranslateContext -> {
                     println("Перевод: \"$line\". Подтвердите сохранение.")
                     this.terminal.context = GenreSaveConfirmContext(context.genre, line)
                 }
@@ -88,14 +94,12 @@ class JLineTerminalRunner(
                         continue
                     }
 
-                    this.terminal.context = GenreSelectContext(context.genre)
+                    this.terminal.context = GenreTranslateContext(context.genre)
                 }
 
                 is CloseRequestContext -> {
-                    if (ConfirmTerminalContext.isConfirm(line)) {
-                        Launcher.shutdown()
+                    if (ConfirmTerminalContext.isConfirm(line))
                         break
-                    }
 
                     println("Вы отменили закрытие.")
                     this.terminal.context = RunningContext()
@@ -103,5 +107,7 @@ class JLineTerminalRunner(
                 }
             }
         }
+
+        Launcher.shutdown()
     }
 }
