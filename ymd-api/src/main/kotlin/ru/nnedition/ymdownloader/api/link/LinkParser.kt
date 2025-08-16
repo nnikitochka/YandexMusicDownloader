@@ -12,6 +12,7 @@ object LinkParser {
             }
 
             cleanUrl.contains("/album/") -> {
+                // Старый формат ссылок на треки
                 if (cleanUrl.contains("/track/")) {
                     val albumId = extractId(cleanUrl, "/album/")
                     val trackId = extractId(cleanUrl, "/track/")
@@ -24,6 +25,7 @@ object LinkParser {
                 }
             }
 
+            // новый формат ссылок на треки
             cleanUrl.contains("/track/") -> {
                 val trackId = extractId(cleanUrl, "/track/")
                 trackId?.let { LinkInfo(LinkType.TRACK, it.toLong()) }
