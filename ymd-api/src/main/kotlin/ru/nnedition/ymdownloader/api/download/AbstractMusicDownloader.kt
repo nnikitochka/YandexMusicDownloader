@@ -1,4 +1,4 @@
-package ru.nnedition.ymdownloader.api.downloader
+package ru.nnedition.ymdownloader.api.download
 
 import nn.edition.yalogger.logger
 import ru.nnedition.ymdownloader.api.YandexMusicClient
@@ -6,7 +6,6 @@ import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
-import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.io.File
 import java.io.FileOutputStream
@@ -34,30 +33,30 @@ abstract class AbstractMusicDownloader(
     companion object {
         val logger = logger(AbstractMusicDownloader::class.java)
 
-        fun String.parsePathPlaceholders(publisher: ArtistMeta, album: Album, track: Track): String = pathPlaceholders(publisher, album, track)
-            .entries.fold(this) { currentText, (key, value) ->
+        fun String.parsePathPlaceholders(track: Track): String =
+            pathPlaceholders(track).entries.fold(this) { currentText, (key, value) ->
                 currentText.replace(key, value.fixPath())
             }
 
-        fun String.parseFilePlaceholders(publisher: ArtistMeta, album: Album, track: Track) = filePlaceholders(publisher, album, track)
-            .entries.fold(this) { currentText, (key, value) ->
+        fun String.parseFilePlaceholders(track: Track) =
+            filePlaceholders(track).entries.fold(this) { currentText, (key, value) ->
                 currentText.replace(key, value.fixPath())
             }
 
-        fun placeholders(publisher: ArtistMeta, album: Album, track: Track) = mapOf(
-            "%author_name%" to publisher.name,
-            "%album_title%" to album.title,
-            "%track_title%" to track.title,
+        fun placeholders(track: Track) = mapOf(
+            "%author_name%" to track.publisher.name,
+            "%album_title%" to track.album.fullTitle,
+            "%track_title%" to track.fullTitle,
         )
 
-        fun pathPlaceholders(publisher: ArtistMeta, album: Album, track: Track) = placeholders(publisher, album, track)
+        fun pathPlaceholders(track: Track) = placeholders(track)
 
-        fun filePlaceholders(publisher: ArtistMeta, album: Album, track: Track) =
-            placeholders(publisher, album, track).toMutableMap().also { places ->
-                places.put("%track_num%", (album.tracks[0].indexOf(album.tracks[0].find { it.id == track.id })+1).toString())
+        fun filePlaceholders(track: Track) =
+            placeholders(track).toMutableMap().also { places ->
+                track.num.let { places["%track_num%"] = if (it.toInt() in 1..9) "0${it}" else it }
             }
 
-        private fun String.fixPath() = replace("/", "\\")
+        private fun String.fixPath() = this.replace("/", "\\")
 
         fun downloadTrack(info: DownloadInfo, outputFile: File) {
             val url = URL(info.url)
@@ -77,7 +76,7 @@ abstract class AbstractMusicDownloader(
             }
         }
 
-        val cipher = Cipher.getInstance("AES/CTR/NoPadding")
+        val cipher = Cipher.getInstance("AES/CTR/NoPadding")!!
 
         fun decryptTrack(encData: ByteArray, key: String): ByteArray {
             val keyBytes = key.chunked(2)
