@@ -15,7 +15,8 @@ import ru.nnedition.ymdownloader.terminal.context.impl.ConfirmTerminalContext
 class JLineTerminalRunner(
     val terminal: JLineTerminal
 ) : Thread() {
-    val jTerminal = this.terminal.lineReader.terminal!!
+    val jReader = this.terminal.lineReader
+    val jTerminal = this.jReader.terminal!!
 
     init {
         isDaemon = false
@@ -35,7 +36,7 @@ class JLineTerminalRunner(
 
         while (!currentThread().isInterrupted) {
             try {
-                line = this.terminal.lineReader.readLine(this.terminal.context.prompt)
+                line = this.jReader.readLine(this.terminal.context.prompt)
             } catch (e: UserInterruptException) {
                 if (this.needContextUpdate) {
                     this.needContextUpdate = false
@@ -72,6 +73,13 @@ class JLineTerminalRunner(
                             println("Возобновление загрузки...")
                             false
                         }
+                        continue
+                    }
+                    else if (line == "status") {
+                        println("В очереди на загрузку ${Launcher.downloader.toDownloadQueue.size} треков.")
+                        println("В очереди ${Launcher.downloader.downloadQueue.size} треков.")
+                        if (Launcher.downloader.paused)
+                            println("Загрузка приостановлена.")
                         continue
                     }
 
