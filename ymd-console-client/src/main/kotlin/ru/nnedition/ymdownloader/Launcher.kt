@@ -57,10 +57,18 @@ object Launcher {
         LoggerFactory.terminalWriter = terminal
         terminal.start()
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            GenreTranslator.foldTranslations()
-            println("Спасибо за использование YandexMusicDownloader :>")
-        })
+        Runtime.getRuntime().addShutdownHook(Thread { onShutdown() })
+    }
+
+    fun shutdown() {
+        onShutdown()
+        exitProcess(0)
+    }
+
+    fun onShutdown() {
+        this.terminal.close()
+        GenreTranslator.foldTranslations()
+        println("Спасибо за использование YandexMusicDownloader :>")
     }
 
     fun getFfmpegProvider(): FfmpegProvider {
@@ -104,10 +112,5 @@ object Launcher {
         }
 
         return provider
-    }
-
-    fun shutdown() {
-        terminal.close()
-        exitProcess(0)
     }
 }
