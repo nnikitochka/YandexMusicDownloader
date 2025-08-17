@@ -1,4 +1,4 @@
-package ru.nnedition.ymdownloader.api.downloader
+package ru.nnedition.ymdownloader.api.download
 
 import ru.nnedition.ymdownloader.api.config.IConfiguration
 

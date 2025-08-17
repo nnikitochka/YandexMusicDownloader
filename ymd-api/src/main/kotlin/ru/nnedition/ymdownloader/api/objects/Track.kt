@@ -15,6 +15,7 @@ data class Track(
     val genre: String?,
 ) {
     private lateinit var _album: Album
+    // Взаимодействие с данным полем без его ручной инициализации невозможно!
     var album: Album = _album
         set(value) {
             if (::_album.isInitialized) return
