@@ -64,12 +64,16 @@ class JLineTerminalRunner(
                         this.terminal.context = CloseRequestContext()
                         continue
                     }
-//                    else if (line == "pause") {
-//                        if (!Launcher.downloader.paused) {
-//                            println("Остановка загрузки...")
-//                        }
-//                        continue
-//                    }
+                    else if (line == "pause") {
+                        Launcher.downloader.paused = if (!Launcher.downloader.paused) {
+                            println("Остановка загрузки...")
+                            true
+                        } else {
+                            println("Возобновление загрузки...")
+                            false
+                        }
+                        continue
+                    }
 
                     val info = LinkParser.parseUrl(line) ?: run {
                         println("Ссылка не распознана, возможно вы ввели что-то не так :(")
