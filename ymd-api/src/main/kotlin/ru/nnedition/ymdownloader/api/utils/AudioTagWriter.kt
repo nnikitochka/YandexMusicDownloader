@@ -6,7 +6,6 @@ import org.jaudiotagger.audio.flac.FlacInfoReader
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.StandardArtwork
 import ru.nnedition.ymdownloader.api.objects.Track
-import ru.nnedition.ymdownloader.api.objects.album.Album
 import java.io.File
 import java.util.logging.Level
 
@@ -24,19 +23,24 @@ object AudioTagWriter {
 
     fun write(
         file: File,
-        cover: ByteArray?,
         track: Track,
-        album: Album,
         genre: String?,
+        cover: ByteArray?,
     ) {
         try {
             val audioFile = AudioFileIO.read(file)
             val tag = audioFile.tagOrCreateAndSetDefault
 
-            tag.setField(FieldKey.TITLE, track.title)
-            tag.setField(FieldKey.ALBUM, album.title)
-            tag.setField(FieldKey.YEAR, album.year.toString())
-            tag.setField(FieldKey.ARTIST, track.artists.joinToString(", ") { it.name })
+            tag.setField(FieldKey.TITLE, track.fullTitle)
+            tag.setField(FieldKey.ALBUM, track.album.fullTitle)
+            tag.setField(FieldKey.YEAR, track.album.year.toString())
+
+            track.artists.forEach {
+                tag.addField(FieldKey.ARTIST, it.name)
+            }
+
+            tag.setField(FieldKey.TRACK, track.num)
+            tag.setField(FieldKey.TRACK_TOTAL, track.album.tracks.size.toString())
 
             genre?.let {
                 tag.setField(FieldKey.GENRE, it)
