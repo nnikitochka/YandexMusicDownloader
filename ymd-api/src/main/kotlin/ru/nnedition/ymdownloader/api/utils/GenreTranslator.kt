@@ -1,10 +1,19 @@
 package ru.nnedition.ymdownloader.api.utils
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParser
 import java.io.File
 
 object GenreTranslator {
     private val gson = Gson()
+    private val gsonFormatter = GsonBuilder()
+        .setPrettyPrinting()
+        .disableHtmlEscaping()
+        .serializeSpecialFloatingPointValues()
+        .create()
+
+    fun formatJson(input: String): String = gsonFormatter.toJson(JsonParser.parseString(input))
 
     var translationsFile = File("genres.json")
     private val genres: MutableMap<String, String> = HashMap()
@@ -38,13 +47,13 @@ object GenreTranslator {
 
         val json = this.gson.toJson(this.genres)
 
-        this.translationsFile.writeText(json)
+        this.translationsFile.writeText(formatJson(json))
     }
 
     fun saveTranslation(translation: Pair<String, String>) =
         saveTranslation(translation.first, translation.second)
     fun saveTranslation(genre: String, translation: String) {
-        genres.put(genre, translation)
+        genres[genre] = translation
     }
 
     fun translate(genre: String) = this.genres[genre]
