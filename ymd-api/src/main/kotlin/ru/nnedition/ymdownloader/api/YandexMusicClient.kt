@@ -1,6 +1,6 @@
 package ru.nnedition.ymdownloader.api
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -11,6 +11,7 @@ import ru.nnedition.ymdownloader.api.objects.DownloadInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.UserInfo
 import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import java.time.Instant
 import java.util.Base64
@@ -35,7 +36,9 @@ class YandexMusicClient private constructor(
     }
 
     companion object {
-        private val gson = Gson()
+        private val gson = GsonBuilder()
+            .registerTypeAdapter(ArtistMeta::class.java, ArtistMeta.Deserializer())
+            .create()
 
         private const val API_URL = "https://api.music.yandex.net"
         private const val YANDEX_USER_AGENT = "YandexMusicDesktopAppWindows/5.54.0"

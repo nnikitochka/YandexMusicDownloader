@@ -35,8 +35,11 @@ object AudioTagWriter {
             tag.setField(FieldKey.ALBUM, track.album.fullTitle)
             tag.setField(FieldKey.YEAR, track.album.year.toString())
 
-            track.artists.forEach {
-                tag.addField(FieldKey.ARTIST, it.name)
+            track.artists.forEach { artist ->
+                tag.addField(FieldKey.ARTIST, artist.name)
+                artist.decomposed.forEach { decArtist ->
+                    tag.addField(FieldKey.ARTIST, decArtist.name)
+                }
             }
 
             tag.setField(FieldKey.TRACK, track.num)
