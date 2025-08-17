@@ -13,4 +13,25 @@ data class Track(
     val coverUri: String,
     val lyricsAvailable: Boolean,
     val genre: String?,
-)
+) {
+    private lateinit var _album: Album
+    var album: Album = _album
+        set(value) {
+            if (::_album.isInitialized) return
+            _album = value
+            field = value
+        }
+        get() = _album
+
+    val num: String
+        get() = (album.tracks.indexOf(album.tracks.find { it.id == id })+1).toString()
+
+    val publisher: ArtistMeta
+        get() = artists[0]
+
+    val fullTitle: String
+        get() = buildString {
+            append(title)
+            version?.let { append(" ($it)") }
+        }
+}
