@@ -1,9 +1,17 @@
 package ru.nnedition.ymdownloader.api.link
 
 object LinkParser {
-    fun parseUrl(url: String): LinkInfo? {
+    fun parseUrls(str: String): List<LinkInfo> {
+        val parts = str.split(" && ")
+        val urls = mutableListOf<LinkInfo>()
+        parts.forEach { part ->
+            parseUrl(part)?.let { urls.add(it) }
+        }
+        return urls
+    }
+    fun parseUrl(str: String): LinkInfo? {
         // Удаление параметров ссылки :>
-        val cleanUrl = url.split("?")[0]
+        val cleanUrl = str.split("?")[0]
 
         return when {
             cleanUrl.contains("/artist/") -> {

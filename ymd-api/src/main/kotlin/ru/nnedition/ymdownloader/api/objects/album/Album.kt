@@ -18,6 +18,9 @@ data class Album(
     val tracks: List<Track>
         get() = volumes[0]
 
+    val publisher: ArtistMeta
+        get() = artists[0]
+
     val fullTitle: String
         get() = buildString {
             append(title)

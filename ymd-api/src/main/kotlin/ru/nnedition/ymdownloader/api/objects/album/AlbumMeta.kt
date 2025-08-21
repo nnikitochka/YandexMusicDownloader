@@ -9,4 +9,7 @@ open class AlbumMeta(
     open val genre: String,
     open val artists: List<Artist>,
     open val available: Boolean,
-)
+) {
+    val publisher: Artist
+        get() = artists[0]
+}
