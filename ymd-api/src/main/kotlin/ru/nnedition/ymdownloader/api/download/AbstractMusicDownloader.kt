@@ -4,6 +4,7 @@ import nn.edition.yalogger.logger
 import ru.nnedition.ymdownloader.api.YandexMusicClient
 import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.objects.DownloadInfo
+import ru.nnedition.ymdownloader.api.objects.LyricInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
@@ -68,6 +69,24 @@ abstract class AbstractMusicDownloader(
             if (connect.responseCode == HttpURLConnection.HTTP_OK) {
                 FileOutputStream(outputFile).use { output ->
                     output.write(decryptTrack(connect.inputStream.readAllBytes(), info.key))
+                }
+                connect.disconnect()
+            } else {
+                connect.disconnect()
+                throw Exception("Ошибка при загрузке файла: ${connect.responseCode} ${connect.responseMessage}")
+            }
+        }
+
+        fun downloadLyric(info: LyricInfo, outputFile: File) {
+            val url = URL(info.downloadUrl)
+            val connect = url.openConnection() as HttpURLConnection
+            connect.requestMethod = "GET"
+            connect.connectTimeout = 20_000
+            connect.readTimeout = 20_000
+
+            if (connect.responseCode == HttpURLConnection.HTTP_OK) {
+                FileOutputStream(outputFile).use { output ->
+                    output.write(connect.inputStream.readAllBytes())
                 }
                 connect.disconnect()
             } else {

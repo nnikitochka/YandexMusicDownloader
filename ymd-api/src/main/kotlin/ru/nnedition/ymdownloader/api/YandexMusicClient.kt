@@ -8,6 +8,7 @@ import okhttp3.Request
 import okio.IOException
 import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.objects.DownloadInfo
+import ru.nnedition.ymdownloader.api.objects.LyricInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.UserInfo
 import ru.nnedition.ymdownloader.api.objects.album.Album
@@ -29,7 +30,7 @@ class YandexMusicClient private constructor(
             .addHeader("Authorization", oauthToken)
             .build()
 
-        return client.newCall(request).execute().use { response ->
+        return this.client.newCall(request).execute().use { response ->
             val json = response.body?.string() ?: error("Empty response")
             gson.fromJson(JsonParser.parseString(json).asJsonObject["result"], UserInfo::class.java)
         }
@@ -129,13 +130,17 @@ class YandexMusicClient private constructor(
         }
     }
 
+    private fun getUnixTimestamp(): String {
+        return Instant.now().epochSecond.toString()
+    }
+
     @Throws(Exception::class)
     private fun createSignature(ts: String, trackId: String, quality: String): String {
         val msg = "${ts}${trackId}${quality}flacaache-aacmp3flac-mp4aac-mp4he-aac-mp4encraw"
 
-        val secretKeySpec = SecretKeySpec(SECRET.toByteArray(), "HmacSHA256")
+        val keySpec = SecretKeySpec(SECRET.toByteArray(), "HmacSHA256")
         val mac = Mac.getInstance("HmacSHA256")
-        mac.init(secretKeySpec)
+        mac.init(keySpec)
 
         val hmacBytes = mac.doFinal(msg.toByteArray())
         val base64Encoded = Base64.getEncoder().encodeToString(hmacBytes)
@@ -143,8 +148,46 @@ class YandexMusicClient private constructor(
         return base64Encoded.substring(0, base64Encoded.length - 1)
     }
 
-    private fun getUnixTimestamp(): String {
-        return Instant.now().epochSecond.toString()
+    private fun createLyricSignature(trackId: String, ts: String): String {
+        val msg = "$trackId$ts"
+
+        val keySpec = SecretKeySpec(SECRET.toByteArray(), "HmacSHA256")
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(keySpec)
+
+        val hmacBytes = mac.doFinal(msg.toByteArray())
+        return Base64.getEncoder().encodeToString(hmacBytes)
+    }
+
+    fun getLyricInfo(trackId: String): LyricInfo? {
+        val url = "$API_URL/tracks/$trackId/lyrics"
+
+        val ts = getUnixTimestamp()
+        val signature = createLyricSignature(trackId, ts)
+
+        val httpUrl = url.toHttpUrl().newBuilder()
+            .addQueryParameter("timeStamp", ts)
+            .addQueryParameter("trackId", trackId)
+            .addQueryParameter("sign", signature)
+            .build()
+
+        val request = Request.Builder()
+            .url(httpUrl)
+            .addHeader("Authorization", this.oauthToken)
+            .addHeader("X-Yandex-Music-Client", YANDEX_USER_AGENT)
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                if (response.code == 404) return null
+                throw IOException("Unexpected response code: ${response.code}")
+            }
+
+            val json = response.body?.string()
+                ?: throw IOException("Response body is null")
+
+            return gson.fromJson(JsonParser.parseString(json).asJsonObject["result"], LyricInfo::class.java)
+        }
     }
 
     @Throws(IOException::class, Exception::class)
@@ -171,11 +214,11 @@ class YandexMusicClient private constructor(
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw okio.IOException("Unexpected response code: ${response.code}")
+                throw IOException("Unexpected response code: ${response.code}")
             }
 
             val json = response.body?.string()
-                ?: throw okio.IOException("Response body is null")
+                ?: throw IOException("Response body is null")
 
             return gson.fromJson(
                 JsonParser.parseString(json).asJsonObject["result"].asJsonObject["downloadInfo"],
