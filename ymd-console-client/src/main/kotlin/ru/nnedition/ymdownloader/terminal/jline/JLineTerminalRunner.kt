@@ -83,12 +83,16 @@ class JLineTerminalRunner(
                         continue
                     }
 
-                    val info = LinkParser.parseUrl(line) ?: run {
+                    val linksInfo = LinkParser.parseUrls(line)
+
+                    if (linksInfo.isEmpty()) {
                         println("Ссылка не распознана, возможно вы ввели что-то не так :(")
                         continue
                     }
 
-                    Launcher.downloader.download(info)
+                    linksInfo.forEach { info ->
+                        Launcher.downloader.download(info)
+                    }
                 }
 
                 is GenreSelectContext -> {

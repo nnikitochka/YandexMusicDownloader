@@ -9,6 +9,8 @@ import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
 import ru.nnedition.ymdownloader.api.ffmpeg.FileFfmpegProvider
 import ru.nnedition.ymdownloader.api.ffmpeg.LinuxFfmpegProvider
 import ru.nnedition.ymdownloader.api.utils.GenreTranslator
+import ru.nnedition.ymdownloader.audio.AudioPlayer
+import ru.nnedition.ymdownloader.audio.AudioType
 import ru.nnedition.ymdownloader.config.TomlConfig
 import ru.nnedition.ymdownloader.terminal.jline.JLineTerminal
 import java.util.Scanner
@@ -26,6 +28,8 @@ object Launcher {
     @JvmStatic
     fun main(args: Array<String>) {
         LoggerFactory.logFormat = "{message}"
+
+        AudioPlayer.preloadAudio()
 
         val ffmpegProvider = getFfmpegProvider()
 
@@ -49,13 +53,13 @@ object Launcher {
             ffmpegProvider
         )
 
-        GenreTranslator.loadTranslations()
-
         this.logger.info("Инициализация загрузчика прошла успешно.")
 
+        GenreTranslator.loadTranslations()
+
         println("Введите ссылку или \"stop\", чтобы остановить программу: ")
-        LoggerFactory.terminalWriter = terminal
-        terminal.start()
+        LoggerFactory.terminalWriter = this.terminal
+        this.terminal.start()
 
         Runtime.getRuntime().addShutdownHook(Thread { onShutdown() })
     }
@@ -85,6 +89,7 @@ object Launcher {
             }
         } catch (e: Exception) {
             this.logger.error(e.message)
+            AudioPlayer.play(AudioType.NOTIFICATION)
 
             val input = Scanner(System.`in`)
 

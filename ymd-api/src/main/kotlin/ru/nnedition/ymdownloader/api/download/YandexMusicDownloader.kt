@@ -1,4 +1,4 @@
-package ru.nnedition.ymdownloader.api.downloader
+package ru.nnedition.ymdownloader.api.download
 
 import ru.nnedition.ymdownloader.api.YandexMusicClient
 import ru.nnedition.ymdownloader.api.config.IConfiguration
@@ -33,7 +33,7 @@ class YandexMusicDownloader(
 
         logger.info("Обработка альбома \"${album.title}\"...")
 
-        album.tracks[0].forEach { track ->
+        album.tracks.forEach { track ->
             downloadTrack(track, config)
         }
     }
@@ -53,12 +53,11 @@ class YandexMusicDownloader(
         }
         else info.codec
 
-        val album = track.albums[0]
-        val publisher = track.artists[0]
+        val album = ymClient.getAlbum(track.album.id)
 
-        val path = File(config.outPath.parsePathPlaceholders(publisher, album, track)).createDir()
+        val path = File(config.outPath.parsePathPlaceholders(track)).createDir()
 
-        val fileName = config.trackTemplate.parseFilePlaceholders(publisher, album, track)
+        val fileName = config.trackTemplate.parseFilePlaceholders(track)
 
         var finalFile = File(path, "$fileName.$format")
 
@@ -101,8 +100,6 @@ class YandexMusicDownloader(
             finalFile = interimFile
         }
 
-        val cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300")
-
         val genre = (track.genre ?: album.genre)?.let { genre ->
             GenreTranslator.translate(genre) ?: let {
                 logger.warn("Найден неизвестный жанр: \"$genre\"")
@@ -110,6 +107,11 @@ class YandexMusicDownloader(
             }
         }
 
-        AudioTagWriter.write(finalFile, cover, track, album, genre)
+        AudioTagWriter.write(
+            file = finalFile,
+            track = track,
+            genre = genre,
+            cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300"),
+        )
     }
 }
