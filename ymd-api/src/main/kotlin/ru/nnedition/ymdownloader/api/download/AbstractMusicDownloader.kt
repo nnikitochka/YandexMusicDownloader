@@ -59,36 +59,34 @@ abstract class AbstractMusicDownloader(
 
         private fun String.fixPath() = this.replace("/", "\\")
 
-        fun downloadTrack(info: DownloadInfo, outputFile: File) {
-            val url = URL(info.url)
-            val connect = url.openConnection() as HttpURLConnection
-            connect.requestMethod = "GET"
-            connect.connectTimeout = 20_000
-            connect.readTimeout = 20_000
 
-            if (connect.responseCode == HttpURLConnection.HTTP_OK) {
-                FileOutputStream(outputFile).use { output ->
-                    output.write(decryptTrack(connect.inputStream.readAllBytes(), info.key))
-                }
-                connect.disconnect()
-            } else {
-                connect.disconnect()
-                throw Exception("Ошибка при загрузке файла: ${connect.responseCode} ${connect.responseMessage}")
+        fun downloadTrack(info: DownloadInfo, outputFile: File) {
+            FileOutputStream(outputFile).use { output ->
+                val bytes = download(info.url)
+                val decrypted = decryptTrack(bytes, info.key)
+
+                output.write(decrypted)
             }
         }
 
         fun downloadLyric(info: LyricInfo, outputFile: File) {
-            val url = URL(info.downloadUrl)
+            FileOutputStream(outputFile).use { output ->
+                val bytes = download(info.downloadUrl)
+
+                output.write(bytes)
+            }
+        }
+
+        fun download(url: String): ByteArray = download(URL(url))
+        fun download(url: URL): ByteArray {
             val connect = url.openConnection() as HttpURLConnection
             connect.requestMethod = "GET"
             connect.connectTimeout = 20_000
             connect.readTimeout = 20_000
 
             if (connect.responseCode == HttpURLConnection.HTTP_OK) {
-                FileOutputStream(outputFile).use { output ->
-                    output.write(connect.inputStream.readAllBytes())
-                }
                 connect.disconnect()
+                return connect.inputStream.readAllBytes()
             } else {
                 connect.disconnect()
                 throw Exception("Ошибка при загрузке файла: ${connect.responseCode} ${connect.responseMessage}")
