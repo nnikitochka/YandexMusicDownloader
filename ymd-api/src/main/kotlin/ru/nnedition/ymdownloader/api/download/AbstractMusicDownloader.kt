@@ -85,8 +85,9 @@ abstract class AbstractMusicDownloader(
             connect.readTimeout = 20_000
 
             if (connect.responseCode == HttpURLConnection.HTTP_OK) {
+                val bytes = connect.inputStream.readAllBytes()
                 connect.disconnect()
-                return connect.inputStream.readAllBytes()
+                return bytes
             } else {
                 connect.disconnect()
                 throw Exception("Ошибка при загрузке файла: ${connect.responseCode} ${connect.responseMessage}")
