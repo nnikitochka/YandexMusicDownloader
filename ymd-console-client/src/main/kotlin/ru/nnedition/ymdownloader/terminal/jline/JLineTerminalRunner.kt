@@ -77,7 +77,7 @@ class JLineTerminalRunner(
                     }
                     else if (line == "status") {
                         println("В очереди на загрузку ${Launcher.downloader.toDownloadQueue.size} треков.")
-                        println("В очереди ${Launcher.downloader.downloadQueue.size} треков.")
+                        println("В очереди загрузки ${Launcher.downloader.downloadQueue.size} треков.")
                         if (Launcher.downloader.paused)
                             println("Загрузка приостановлена.")
                         continue

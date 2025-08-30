@@ -3,6 +3,7 @@ package ru.nnedition.ymdownloader.api.utils
 import nn.edition.yalogger.logger
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.audio.flac.FlacInfoReader
+import org.jaudiotagger.audio.mp3.MP3FileReader
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.StandardArtwork
 import ru.nnedition.ymdownloader.api.objects.Track
@@ -15,6 +16,7 @@ object AudioTagWriter {
     var enableLogs: Boolean = false
         set(value) {
             FlacInfoReader.logger.level = Level.OFF
+            MP3FileReader.logger.level = Level.OFF
             field = value
         }
     init {
@@ -35,6 +37,9 @@ object AudioTagWriter {
             tag.setField(FieldKey.ALBUM, track.album.fullTitle)
             tag.setField(FieldKey.YEAR, track.album.year.toString())
 
+            while (tag.hasField(FieldKey.ARTIST)) {
+                tag.deleteField(FieldKey.ARTIST)
+            }
             track.artists.forEach { artist ->
                 tag.addField(FieldKey.ARTIST, artist.name)
                 artist.decomposed.forEach { decArtist ->

@@ -195,7 +195,7 @@ class MusicDownloader(
         } ?: run {
             val context = GenreSelectContext()
             Launcher.terminal.context = context
-            logger.warn("Жанр трека \"${track.title}\" не найден. Введите его вручную:")
+            logger.warn("Жанр трека \"${track.fullTitle}\" не найден. Введите его вручную:")
             AudioPlayer.play(AudioType.NOTIFICATION)
             while (context.genre == null) {}
             context.genre!!
