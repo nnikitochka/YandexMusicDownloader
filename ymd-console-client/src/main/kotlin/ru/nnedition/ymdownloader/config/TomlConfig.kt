@@ -15,7 +15,7 @@ data class TomlConfig(
     override var keepCovers: Boolean = false,
     override var writeCovers: Boolean = true,
     override var trackTemplate: String = "%author_name% — %track_title%",
-    override var outPath: String = "music/%author_name%/%album_title%",
+    override var outPath: String = "music/%author_name%/%year% - %album_title%",
     var ffmpegPath: String = ""
 ) : IConfiguration {
     init {
