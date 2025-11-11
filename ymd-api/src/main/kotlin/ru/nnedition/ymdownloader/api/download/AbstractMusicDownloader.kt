@@ -31,6 +31,17 @@ abstract class AbstractMusicDownloader(
         downloadTrack(this.ymClient.getTrack(trackId), config)
     abstract fun downloadTrack(track: Track, config: IConfiguration = this.config)
 
+    fun downloadAlbumCover(url: String, path: File) {
+        val coverFile = File(path, "album-cover.jpg")
+        if (coverFile.exists()) return
+
+        FileOutputStream(coverFile).use { output ->
+            val data = this.ymClient.getCoverData(url, true, false, useCache = false)
+
+            output.write(data)
+        }
+    }
+
     companion object {
         val logger = logger(AbstractMusicDownloader::class.java)
 
@@ -47,7 +58,7 @@ abstract class AbstractMusicDownloader(
         fun placeholders(track: Track) = mapOf(
             "%author_name%" to track.publisher.name,
             "%album_title%" to track.album.fullTitle,
-            "year" to track.album.year.toString(),
+            "%year%" to track.album.year.toString(),
             "%track_title%" to track.fullTitle,
         )
 

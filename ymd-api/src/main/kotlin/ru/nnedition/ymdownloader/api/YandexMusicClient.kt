@@ -227,27 +227,39 @@ class YandexMusicClient private constructor(
         }
     }
 
-    val covers: MutableMap<String, ByteArray> = HashMap()
+    private val covers: MutableMap<String, ByteArray> = HashMap()
     fun getCoverData(
         url: String,
         original: Boolean,
         withRange: Boolean,
-        // Максимально доступное разрешение
-        quality: String = "800x800"
+        quality: String = "800x800",
+        useCache: Boolean = true
     ): ByteArray {
         val fullUrl = "https://${url.replace("/%%", if (original) "/orig" else "/$quality")}"
 
-        return covers.getOrPut(fullUrl) {
-            val request = Request.Builder()
-                .url(fullUrl)
-                .apply { if (withRange) addHeader("Range", "bytes=0-") }
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful)
-                    throw okio.IOException("HTTP error: ${response.code}")
-                response.body?.bytes() ?: throw okio.IOException("Empty response body")
+        return if (useCache) {
+            covers.getOrPut(fullUrl) {
+                fetchCoverData(fullUrl, withRange)
             }
+        } else {
+            fetchCoverData(fullUrl, withRange)
         }
+    }
+
+    private fun fetchCoverData(fullUrl: String, withRange: Boolean): ByteArray {
+        val request = Request.Builder()
+            .url(fullUrl)
+            .apply { if (withRange) addHeader("Range", "bytes=0-") }
+            .build()
+
+        return client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful)
+                throw okio.IOException("HTTP error: ${response.code}")
+            response.body?.bytes() ?: throw okio.IOException("Empty response body")
+        }
+    }
+
+    fun clearCoverCache() {
+        covers.clear()
     }
 }

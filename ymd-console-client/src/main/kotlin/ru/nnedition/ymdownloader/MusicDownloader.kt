@@ -128,6 +128,9 @@ class MusicDownloader(
                 }
             }
 
+            if (config.keepCovers)
+                downloadAlbumCover(track.coverUri, path)
+
             println("Загрузка ${if (track.album.isSingle()) "сингла" else "трека" } \"${track.fullTitle}\" окончена.")
 
             if (this.downloadQueue.isEmpty())
