@@ -9,15 +9,16 @@ data class Album(
     val type: String?,
     val version: String?,
     val year: Int,
-    val releaseDate: String,
+    val releaseDate: String?,
     val coverUri: String,
     val genre: String?,
     val artists: List<ArtistMeta>,
     val available: Boolean,
     val volumes: List<List<Track>>,
 ) {
-    val releaseDateFormatted: String
+    val releaseDateFormatted: String?
         get() {
+            releaseDate ?: return null
             val index = releaseDate.indexOf("T")
             return if (index == -1) releaseDate
             else releaseDate.replaceRange(index, releaseDate.length, "")
