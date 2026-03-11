@@ -31,8 +31,8 @@ abstract class AbstractMusicDownloader(
         downloadTrack(this.ymClient.getTrack(trackId), config)
     abstract fun downloadTrack(track: Track, config: IConfiguration = this.config)
 
-    fun downloadAlbumCover(url: String, path: File) {
-        val coverFile = File(path, "album-cover.jpg")
+    fun downloadAlbumCover(url: String, path: File, fileName: String) {
+        val coverFile = File(path, "$fileName.jpg")
         if (coverFile.exists()) return
 
         FileOutputStream(coverFile).use { output ->

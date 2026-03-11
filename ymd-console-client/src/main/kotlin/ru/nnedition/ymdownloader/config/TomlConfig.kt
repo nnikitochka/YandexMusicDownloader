@@ -17,6 +17,7 @@ data class TomlConfig(
     override var trackTemplate: String = "%author_name% — %track_title%",
     override var writeTrackCovers: Boolean = false,
     override var writeAlbumCovers: Boolean = true,
+    override var albumCoverFileName: String = "cover",
     override var fileReplacements: Map<String, String> = emptyMap(),
 ) : IConfiguration {
     init {
@@ -46,6 +47,7 @@ data class TomlConfig(
         this.trackTemplate = toml.getString("track_template") ?: this.trackTemplate
         this.writeTrackCovers = toml.getBoolean("write_track_covers") ?: this.writeTrackCovers
         this.writeAlbumCovers = toml.getBoolean("write_album_covers") ?: this.writeAlbumCovers
+        this.albumCoverFileName = toml.getString("album_cover_file_name") ?: this.albumCoverFileName
 
         toml.getTable("file_replacements").toMap()?.also { replacementsRaw ->
             val replacements = linkedMapOf<String, String>()
@@ -65,6 +67,7 @@ data class TomlConfig(
         "track_template" to trackTemplate,
         "write_track_covers" to writeTrackCovers,
         "write_album_covers" to writeAlbumCovers,
+        "album_cover_file_name" to albumCoverFileName,
         "file_replacements" to fileReplacements,
     )
 }

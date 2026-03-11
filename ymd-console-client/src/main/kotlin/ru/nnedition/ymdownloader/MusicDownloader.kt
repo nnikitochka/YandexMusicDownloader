@@ -141,7 +141,7 @@ class MusicDownloader(
             }
 
             if (config.writeAlbumCovers) {
-                downloadAlbumCover(track.coverUri, path)
+                downloadAlbumCover(track.coverUri, path, config.albumCoverFileName)
             }
 
             println("Загрузка ${if (track.album.isSingle()) "сингла" else "трека" } \"${track.fullTitle}\" окончена.")
