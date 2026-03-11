@@ -36,7 +36,7 @@ object AudioTagWriter {
 
             tag.setField(FieldKey.TITLE, track.fullTitle)
             tag.setField(FieldKey.ALBUM, track.album.fullTitle)
-            tag.setField(FieldKey.YEAR, track.album.year.toString())
+            tag.setField(FieldKey.YEAR, track.album.releaseDateFormatted)
 
             while (tag.hasField(FieldKey.ARTIST)) {
                 tag.deleteField(FieldKey.ARTIST)
