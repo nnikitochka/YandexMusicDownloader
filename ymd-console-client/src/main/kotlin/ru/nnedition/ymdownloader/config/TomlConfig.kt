@@ -18,7 +18,14 @@ data class TomlConfig(
     override var writeTrackCovers: Boolean = false,
     override var writeAlbumCovers: Boolean = true,
     override var albumCoverFileName: String = "cover",
-    override var fileReplacements: Map<String, String> = emptyMap(),
+    override var fileReplacements: Map<String, String> = mapOf(
+        "<" to "_",
+        "|" to "_",
+        ":" to "_",
+        "*" to "_",
+        "?" to "",
+        ">" to "_",
+    ),
 ) : IConfiguration {
     init {
         val configFile = File(fileName)
@@ -49,7 +56,7 @@ data class TomlConfig(
         this.writeAlbumCovers = toml.getBoolean("write_album_covers") ?: this.writeAlbumCovers
         this.albumCoverFileName = toml.getString("album_cover_file_name") ?: this.albumCoverFileName
 
-        toml.getTable("file_replacements").toMap()?.also { replacementsRaw ->
+        toml.getTable("file_replacements")?.toMap()?.also { replacementsRaw ->
             val replacements = linkedMapOf<String, String>()
             replacementsRaw.forEach { (key, value) ->
                 replacements[key.removePrefix("\"").removeSuffix("\"")] = value.toString()
