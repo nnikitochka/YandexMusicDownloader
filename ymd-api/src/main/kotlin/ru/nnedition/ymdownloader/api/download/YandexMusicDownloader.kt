@@ -5,6 +5,7 @@ import ru.nnedition.ymdownloader.api.config.IConfiguration
 import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import ru.nnedition.ymdownloader.api.utils.AudioTagWriter
 import ru.nnedition.ymdownloader.api.utils.GenreTranslator
@@ -55,9 +56,9 @@ class YandexMusicDownloader(
 
         val album = ymClient.getAlbum(track.album.id)
 
-        val path = File(config.outPath.parsePathPlaceholders(track)).createDir()
+        val path = File(config.outPath.parsePathPlaceholders(track, config)).createDir()
 
-        val fileName = config.trackTemplate.parseFilePlaceholders(track)
+        val fileName = config.trackTemplate.parseFilePlaceholders(track, config)
 
         var finalFile = File(path, "$fileName.$format")
 
@@ -107,11 +108,20 @@ class YandexMusicDownloader(
             }
         }
 
+        val artists = mutableListOf<ArtistMeta>()
+        track.artists.forEach { artist ->
+            artists.add(artist)
+            artists.addAll(artist.decomposed)
+        }
+
         AudioTagWriter.write(
             file = finalFile,
             track = track,
+            artists = artists.map { it.name },
             genre = genre,
-            cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300"),
+            cover = if (config.writeTrackCovers)
+                this.ymClient.getCoverData(track.coverUri, false, false, "300x300")
+            else null,
         )
     }
 }

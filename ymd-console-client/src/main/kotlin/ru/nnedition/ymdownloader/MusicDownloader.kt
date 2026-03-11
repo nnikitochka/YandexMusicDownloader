@@ -9,6 +9,7 @@ import ru.nnedition.ymdownloader.api.link.LinkType
 import ru.nnedition.ymdownloader.api.objects.LyricInfo
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
+import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMetaResult
 import ru.nnedition.ymdownloader.api.utils.AudioTagWriter
 import ru.nnedition.ymdownloader.api.utils.GenreTranslator
@@ -59,9 +60,11 @@ class MusicDownloader(
 
             val shouldMux = info.codec.contains("mp4")
 
-            val path = File(config.outPath.parsePathPlaceholders(track)).createDir()
+            val path = File(
+                config.outPath.parsePathPlaceholders(track, config)
+            ).createDir()
 
-            val fileName = config.trackTemplate.parseFilePlaceholders(track)
+            val fileName = config.trackTemplate.parseFilePlaceholders(track, config)
 
             var finalFile = File(path, "$fileName.$format")
 
@@ -126,7 +129,9 @@ class MusicDownloader(
                 track = track,
                 artists.map { it.name },
                 genre = item.genre,
-                cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300"),
+                cover =  if (config.writeTrackCovers)
+                    this.ymClient.getCoverData(track.coverUri, false, false, "300x300")
+                else null,
             )
 
             item.lyricInfo?.let { lyricInfo ->
@@ -135,8 +140,9 @@ class MusicDownloader(
                 }
             }
 
-            if (config.keepCovers)
+            if (config.writeAlbumCovers) {
                 downloadAlbumCover(track.coverUri, path)
+            }
 
             println("Загрузка ${if (track.album.isSingle()) "сингла" else "трека" } \"${track.fullTitle}\" окончена.")
 

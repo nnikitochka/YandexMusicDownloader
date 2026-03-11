@@ -45,14 +45,24 @@ abstract class AbstractMusicDownloader(
     companion object {
         val logger = logger(AbstractMusicDownloader::class.java)
 
-        fun String.parsePathPlaceholders(track: Track): String =
+        fun String.parsePathPlaceholders(track: Track, config: IConfiguration): String =
             pathPlaceholders(track).entries.fold(this) { currentText, (key, value) ->
-                currentText.replace(key, value.fixPath())
+                if (currentText.contains(key))
+                    currentText.replace(
+                        key,
+                        value.applyFileReplacements(config)
+                    )
+                else currentText
             }
 
-        fun String.parseFilePlaceholders(track: Track) =
+        fun String.parseFilePlaceholders(track: Track, config: IConfiguration) =
             filePlaceholders(track).entries.fold(this) { currentText, (key, value) ->
-                currentText.replace(key, value.fixPath())
+                if (currentText.contains(key))
+                    currentText.replace(
+                        key,
+                        value.applyFileReplacements(config)
+                    )
+                else currentText
             }
 
         fun placeholders(track: Track) = mapOf(
@@ -69,8 +79,15 @@ abstract class AbstractMusicDownloader(
                 track.num.let { places["%track_num%"] = if (it.toInt() in 1..9) "0${it}" else it }
             }
 
-        private fun String.fixPath() = this.replace("/", "\\")
-
+        fun String.applyFileReplacements(config: IConfiguration): String {
+            var result = this.replace("\\", "_")
+                .replace("/", "_")
+                .replace("\"", "_")
+            for ((from, to) in config.fileReplacements) {
+                result = result.replace(from, to)
+            }
+            return result
+        }
 
         fun downloadTrack(info: DownloadInfo, outputFile: File) {
             FileOutputStream(outputFile).use { output ->

@@ -19,14 +19,9 @@ interface IConfiguration {
     var sleep: Int
 
     /**
-     * Надо ли сохранять обложки альбомов и исполнителей?
+     * Путь, по которому будут сохраняться треки.
      */
-    var keepCovers: Boolean
-
-    /**
-     * Надо ли записывать обложки треков в теги треков?
-     */
-    var writeCovers: Boolean
+    var outPath: String
 
     /**
      * Шаблон для имён файлов треков.
@@ -34,7 +29,18 @@ interface IConfiguration {
     var trackTemplate: String
 
     /**
-     * Путь, по которому будут сохраняться треки.
+     * Надо ли записывать обложки треков в теги треков?
      */
-    var outPath: String
+    var writeTrackCovers: Boolean
+
+    /**
+     * Надо ли сохранять обложки альбомов?
+     */
+    var writeAlbumCovers: Boolean
+
+    /**
+     * Символы, которые будут заменены при сохранении треков.
+     * Ключ - символ для замены, значение - символ, на который будет происходить замена.
+     */
+    var fileReplacements: Map<String, String>
 }

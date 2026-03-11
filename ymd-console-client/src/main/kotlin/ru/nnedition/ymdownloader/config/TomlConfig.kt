@@ -12,11 +12,12 @@ data class TomlConfig(
     override var token: String = "",
     override var quality: Quality = Quality.LOSSLESS,
     override var sleep: Int = 5,
-    override var keepCovers: Boolean = false,
-    override var writeCovers: Boolean = true,
-    override var trackTemplate: String = "%author_name% — %track_title%",
+    var ffmpegPath: String = "",
     override var outPath: String = "music/%author_name%/%year% - %album_title%",
-    var ffmpegPath: String = ""
+    override var trackTemplate: String = "%author_name% — %track_title%",
+    override var writeTrackCovers: Boolean = false,
+    override var writeAlbumCovers: Boolean = true,
+    override var fileReplacements: Map<String, String> = emptyMap(),
 ) : IConfiguration {
     init {
         val configFile = File(fileName)
@@ -39,22 +40,31 @@ data class TomlConfig(
         this.quality = toml.getLong("quality")?.toInt()?.let {
             Quality.fromInt(it)
         } ?: this.quality
-        this.keepCovers = toml.getBoolean("keep_covers") ?: this.keepCovers
-        this.outPath = toml.getString("out_path") ?: this.outPath
         this.sleep = toml.getLong("sleep")?.toInt() ?: this.sleep
-        this.writeCovers = toml.getBoolean("write_covers") ?: this.writeCovers
-        this.trackTemplate = toml.getString("track_template") ?: this.trackTemplate
         this.ffmpegPath = toml.getString("ffmpeg_path") ?: this.ffmpegPath
+        this.outPath = toml.getString("out_path") ?: this.outPath
+        this.trackTemplate = toml.getString("track_template") ?: this.trackTemplate
+        this.writeTrackCovers = toml.getBoolean("write_track_covers") ?: this.writeTrackCovers
+        this.writeAlbumCovers = toml.getBoolean("write_album_covers") ?: this.writeAlbumCovers
+
+        toml.getTable("file_replacements").toMap()?.also { replacementsRaw ->
+            val replacements = linkedMapOf<String, String>()
+            replacementsRaw.forEach { (key, value) ->
+                replacements[key.removePrefix("\"").removeSuffix("\"")] = value.toString()
+            }
+            fileReplacements = replacements
+        }
     }
 
     private fun getConfigMap(): Map<String, Any> = mapOf(
-        "quality" to quality.num,
-        "keep_covers" to keepCovers,
-        "out_path" to outPath,
         "token" to token,
+        "quality" to quality.num,
         "sleep" to sleep,
-        "write_covers" to writeCovers,
+        "ffmpeg_path" to ffmpegPath,
+        "out_path" to outPath,
         "track_template" to trackTemplate,
-        "ffmpeg_path" to ffmpegPath
+        "write_track_covers" to writeTrackCovers,
+        "write_album_covers" to writeAlbumCovers,
+        "file_replacements" to fileReplacements,
     )
 }
