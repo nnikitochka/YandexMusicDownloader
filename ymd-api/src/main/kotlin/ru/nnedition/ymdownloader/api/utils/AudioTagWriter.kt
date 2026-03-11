@@ -26,6 +26,7 @@ object AudioTagWriter {
     fun write(
         file: File,
         track: Track,
+        artists: List<String>,
         genre: String?,
         cover: ByteArray?,
     ) {
@@ -40,11 +41,8 @@ object AudioTagWriter {
             while (tag.hasField(FieldKey.ARTIST)) {
                 tag.deleteField(FieldKey.ARTIST)
             }
-            track.artists.forEach { artist ->
-                tag.addField(FieldKey.ARTIST, artist.name)
-                artist.decomposed.forEach { decArtist ->
-                    tag.addField(FieldKey.ARTIST, decArtist.name)
-                }
+            artists.forEach { artist ->
+                tag.addField(FieldKey.ARTIST, artist)
             }
 
             tag.setField(FieldKey.TRACK, track.num)

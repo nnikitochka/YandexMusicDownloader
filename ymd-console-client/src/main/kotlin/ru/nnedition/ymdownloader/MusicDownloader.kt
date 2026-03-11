@@ -115,9 +115,16 @@ class MusicDownloader(
                 finalFile = interimFile
             }
 
+            val artists = mutableListOf<ArtistMeta>()
+            track.artists.forEach { artist ->
+                artists.add(artist)
+                artists.addAll(artist.decomposed)
+            }
+
             AudioTagWriter.write(
                 file = finalFile,
                 track = track,
+                artists.map { it.name },
                 genre = item.genre,
                 cover = this.ymClient.getCoverData(track.coverUri, false, false, "300x300"),
             )
