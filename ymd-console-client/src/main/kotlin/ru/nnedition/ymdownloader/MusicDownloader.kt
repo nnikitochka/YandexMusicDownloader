@@ -58,9 +58,6 @@ class MusicDownloader(
 
             val info = this.ymClient.getFileInfo(track.id.toString(), config.quality.toString())
 
-            println(info)
-            println(info.codec)
-            println(config.quality)
             val format = if (info.codec.contains("-")) {
                 val parts = info.codec.split("-")
                 if (parts[0] == "he") parts[1]
