@@ -22,6 +22,7 @@ import java.io.File
 import java.lang.Thread.currentThread
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 @Suppress("HasPlatformType")
@@ -32,6 +33,11 @@ class MusicDownloader(
 ) : AbstractMusicDownloader(ymClient) {
     @Volatile
     var paused = false
+
+    var downloaded: AtomicInteger = AtomicInteger(0)
+        private set
+    var totalTracks: AtomicInteger = AtomicInteger(0)
+        private set
 
     val toDownloadQueue = LinkedBlockingQueue<DownloadItem>()
     val downloadQueue = LinkedBlockingQueue<DownloadItem>()
@@ -144,10 +150,13 @@ class MusicDownloader(
                 downloadAlbumCover(track.coverUri, path, config.albumCoverFileName)
             }
 
-            println("Загрузка ${if (track.album.isSingle()) "сингла" else "трека" } \"${track.fullTitle}\" окончена.")
+            println("[${downloaded.incrementAndGet()}/${totalTracks.get()}] Загрузка ${if (track.album.isSingle()) "сингла" else "трека" } \"${track.fullTitle}\" окончена.")
 
-            if (this.downloadQueue.isEmpty())
-                println("Загрузка завершена.")
+            if (this.downloadQueue.isEmpty()) {
+                println("Загрузка завершена. Всего было скачено треков: $downloaded.")
+                totalTracks.set(0)
+                downloaded.set(0)
+            }
         }
     }
 
@@ -169,6 +178,7 @@ class MusicDownloader(
                 }
 
                 this.downloadQueue.addAll(this.toDownloadQueue)
+                totalTracks.addAndGet(this.toDownloadQueue.size)
                 this.toDownloadQueue.clear()
             }.onFailure { it.printStackTrace() }
         }
