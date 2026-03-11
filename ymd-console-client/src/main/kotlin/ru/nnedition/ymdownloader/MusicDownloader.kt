@@ -7,6 +7,7 @@ import ru.nnedition.ymdownloader.api.ffmpeg.FfmpegProvider
 import ru.nnedition.ymdownloader.api.link.LinkInfo
 import ru.nnedition.ymdownloader.api.link.LinkType
 import ru.nnedition.ymdownloader.api.objects.LyricInfo
+import ru.nnedition.ymdownloader.api.objects.Quality
 import ru.nnedition.ymdownloader.api.objects.Track
 import ru.nnedition.ymdownloader.api.objects.album.Album
 import ru.nnedition.ymdownloader.api.objects.artist.ArtistMeta
@@ -57,6 +58,9 @@ class MusicDownloader(
 
             val info = this.ymClient.getFileInfo(track.id.toString(), config.quality.toString())
 
+            println(info)
+            println(info.codec)
+            println(config.quality)
             val format = if (info.codec.contains("-")) {
                 val parts = info.codec.split("-")
                 if (parts[0] == "he") parts[1]
@@ -111,7 +115,13 @@ class MusicDownloader(
             }
 
             if (format == "aac") {
-                val interimFile = File(path, "$fileName.flac")
+                val fileExt = when (config.quality) {
+                    Quality.LOSSLESS -> "flac"
+                    Quality.HIGH, Quality.NORMAL -> "ogg"
+                    else -> "mp3"
+                }
+
+                val interimFile = File(path, "$fileName.$fileExt")
 
                 if (interimFile.exists()) {
                     logger.info("Трек \"$fileName\" уже существует.")
