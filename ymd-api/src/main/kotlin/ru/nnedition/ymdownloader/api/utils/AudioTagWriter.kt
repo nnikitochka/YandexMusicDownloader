@@ -34,9 +34,12 @@ object AudioTagWriter {
             val audioFile = AudioFileIO.read(file)
             val tag = audioFile.tagOrCreateAndSetDefault
 
-            tag.setField(FieldKey.TITLE, track.fullTitle)
             tag.setField(FieldKey.ALBUM, track.album.fullTitle)
             tag.setField(FieldKey.YEAR, track.album.releaseDateFormatted ?: track.album.year.toString())
+            tag.setField(FieldKey.TITLE, track.title)
+            track.version?.let { version ->
+                tag.setField(FieldKey.VERSION, version)
+            }
 
             while (tag.hasField(FieldKey.ARTIST)) {
                 tag.deleteField(FieldKey.ARTIST)
