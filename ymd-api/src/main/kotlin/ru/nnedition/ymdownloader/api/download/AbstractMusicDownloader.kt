@@ -66,7 +66,7 @@ abstract class AbstractMusicDownloader(
             }
 
         fun placeholders(track: Track) = mapOf(
-            "%author_name%" to track.publisher.name,
+            "%author_name%" to track.album.publisher.name,
             "%album_title%" to track.album.fullTitle,
             "%year%" to track.album.year.toString(),
             "%track_title%" to track.fullTitle,
