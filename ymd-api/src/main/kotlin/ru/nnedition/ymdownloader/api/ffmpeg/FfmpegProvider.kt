@@ -19,5 +19,5 @@ interface FfmpegProvider {
      * @param input Входной аудиофайл.
      * @param output Выходной аудиофайл.
      */
-    fun convert(input: File, output: File)
+    fun convert(input: File, output: File, bitrate: Int)
 }

@@ -113,7 +113,6 @@ class MusicDownloader(
 
             if (format == "aac") {
                 val fileExt = when (config.quality) {
-                    Quality.LOSSLESS -> "flac"
                     Quality.HIGH, Quality.NORMAL -> "ogg"
                     else -> "mp3"
                 }
@@ -126,7 +125,7 @@ class MusicDownloader(
                     continue
                 }
 
-                this.ffmpeg.convert(finalFile, interimFile)
+                this.ffmpeg.convert(finalFile, interimFile, info.bitrate)
                 finalFile.delete()
                 finalFile = interimFile
             }

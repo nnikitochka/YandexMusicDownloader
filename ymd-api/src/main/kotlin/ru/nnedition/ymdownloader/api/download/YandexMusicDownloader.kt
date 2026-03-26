@@ -96,7 +96,7 @@ class YandexMusicDownloader(
                 return
             }
 
-            this.ffmpeg.convert(finalFile, interimFile)
+            this.ffmpeg.convert(finalFile, interimFile, info.bitrate)
             finalFile.delete()
             finalFile = interimFile
         }

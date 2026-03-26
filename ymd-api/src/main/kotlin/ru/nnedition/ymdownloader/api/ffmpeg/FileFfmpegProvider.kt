@@ -48,7 +48,7 @@ open class FileFfmpegProvider(
      * @throws IllegalArgumentException Если входной и выходной файлы одинаковые.
      * @throws IOException Если произошла ошибка при выполнении ffmpeg.
      */
-    override fun convert(input: File, output: File) {
+    override fun convert(input: File, output: File, bitrate: Int) {
         require(input.absolutePath != output.absolutePath) {
             "Входной и выходной файлы должны отличаться!"
         }
@@ -57,7 +57,8 @@ open class FileFfmpegProvider(
             ffmpegFile.absolutePath,
             "-i",
             input.absolutePath,
-            output.absolutePath
+            "-b:a", "${bitrate}k",
+            output.absolutePath,
         ).start()
 
         val exitCode = process.waitFor()
