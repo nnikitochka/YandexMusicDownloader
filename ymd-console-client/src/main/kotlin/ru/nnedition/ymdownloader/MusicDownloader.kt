@@ -83,11 +83,11 @@ class MusicDownloader(
             val toMuxFile = File(path, "$fileName.mp4")
 
             var successDownload = false
-            repeat(3) { attempt ->
+            for (attempt in 1..3) {
                 try {
                     downloadTrack(info, if (shouldMux) toMuxFile else finalFile)
                     successDownload = true
-                    return@repeat
+                    break
                 } catch (e: Exception) {
                     logger.error("Ошибка при ${attempt+1} попытке загрузки трека ${track.fullTitle}: ${e.message}")
                 }
