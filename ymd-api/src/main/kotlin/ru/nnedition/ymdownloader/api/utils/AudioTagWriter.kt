@@ -47,6 +47,7 @@ object AudioTagWriter {
             artists.forEach { artist ->
                 tag.addField(FieldKey.ARTIST, artist)
             }
+            tag.setField(FieldKey.ALBUM_ARTIST, album.publisher.name)
 
             tag.setField(FieldKey.TRACK, track.num)
             tag.setField(FieldKey.TRACK_TOTAL, track.album.tracks.size.toString())
