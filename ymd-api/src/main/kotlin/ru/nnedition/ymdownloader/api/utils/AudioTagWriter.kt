@@ -56,7 +56,7 @@ object AudioTagWriter {
             tag.setField(FieldKey.ALBUM_ARTIST, album.publisher.name)
 
             tag.setField(FieldKey.TRACK, track.num)
-            tag.setField(FieldKey.TRACK_TOTAL, track.album.tracks.size.toString())
+            tag.setField(FieldKey.TRACK_TOTAL, album.tracks.size.toString())
 
             genre?.let {
                 tag.setField(FieldKey.GENRE, it)
